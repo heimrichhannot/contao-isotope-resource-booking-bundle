@@ -12,9 +12,11 @@ use Contao\CoreBundle\ContaoCoreBundle;
 use Contao\ManagerPlugin\Bundle\BundlePluginInterface;
 use Contao\ManagerPlugin\Bundle\Config\BundleConfig;
 use Contao\ManagerPlugin\Bundle\Parser\ParserInterface;
+use Contao\ManagerPlugin\Config\ConfigPluginInterface;
 use HeimrichHannot\IsotopeResourceBookingBundle\HeimrichHannotIsotopeResourceBookingBundle;
+use Symfony\Component\Config\Loader\LoaderInterface;
 
-class Plugin implements BundlePluginInterface
+class Plugin implements BundlePluginInterface, ConfigPluginInterface
 {
     public function getBundles(ParserInterface $parser)
     {
@@ -24,5 +26,12 @@ class Plugin implements BundlePluginInterface
                 'isotope',
             ]),
         ];
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig)
+    {
+        if (class_exists('HeimrichHannot\EncoreBundle\HeimrichHannotContaoEncoreBundle')) {
+            $loader->load('@HeimrichHannotIsotopeResourceBookingBundle/config/config_encore.yml');
+        }
     }
 }

@@ -19,10 +19,6 @@ use Isotope\Message;
 
 class BookingPlanAction extends CartAction
 {
-    public function __construct()
-    {
-    }
-
     public function getName()
     {
         return 'edit_booking_plan';
@@ -40,6 +36,10 @@ class BookingPlanAction extends CartAction
 
     public function generate(IsotopeProduct $product, array $config = [])
     {
+        if (System::getContainer()->has('huh.encore.asset.frontend')) {
+            System::getContainer()->get('huh.encore.asset.frontend')->addActiveEntrypoint('contao-isotope-resource-booking-bundle');
+        }
+
         $url = System::getContainer()->get('contao.routing.url_generator')->generate('huh_isotope_resource_booking_blocked_dates');
 
         return sprintf(

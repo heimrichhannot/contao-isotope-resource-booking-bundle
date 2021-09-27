@@ -1,0 +1,19 @@
+{
+  "name": "contao-isotope-resource-booking-bundle",
+  "version": "1.0.0",
+  "description": "This bundle adds a booking functionality to [Isotope](https://isotopeecommerce.org).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle.git"
+  },
+  "author": "Heimrich & Hannot Gmbh <digitales@heimrich-hannot.de>",
+  "license": "LGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues"
+  },
+  "homepage": "https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle#readme",
+  "dependencies": {
+    "flatpickr": "^4.5.1",
+    "jquery": "^1.12.4||^2.2||^3.3.1"
+  }
+}

@@ -18,12 +18,12 @@
             <tr>
                 <th colspan="7" class="tl_header">
                     {{ time|date('F')|trans }}
-                    <a href="{{ path('huh.isotope.backend.bookingoverview', {
+                    <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
                         'id': product.id,
                         'month': time|date_modify("-1 month")|date('n'),
                         'year': time|date_modify("- 1 month")|date('Y')
                     }) }}" id="huh_isotope_bookingoverview_prev"><img src="system/themes/flexible/icons/movel.svg"></a>
-                    <a href="{{ path('huh.isotope.backend.bookingoverview', {
+                    <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
                         'id': product.id,
                         'month': time|date_modify("+1 month")|date('n'),
                         'year': time|date_modify("+ 1 month")|date('Y')
@@ -51,7 +51,7 @@
                     {% endif %}
                     {% set tstamp = day ~ "." ~ time|date('n') ~ "." ~ time|date('Y') %}
                     <td class="day tl_file_list">
-                        <a href="{{ path('huh.isotope.backend.bookinglist', {
+                        <a href="{{ path('huh_isotope_resource_booking_bookinglist', {
                             'id': product.id,
                             'day': day,
                             'month': time|date('n'),
