@@ -1,0 +1,380 @@
+<?php
+
+/*
+ * Copyright (c) 2021 Heimrich & Hannot GmbH
+ *
+ * @license LGPL-3.0-or-later
+ */
+
+namespace HeimrichHannot\IsotopeResourceBookingBundle\Attribute;
+
+use Contao\CoreBundle\Framework\ContaoFramework;
+use Contao\Model\Collection;
+use Contao\StringUtil;
+use HeimrichHannot\UtilsBundle\Model\ModelUtil;
+use Isotope\Interfaces\IsotopeProduct;
+use Isotope\Model\Product;
+use Isotope\Model\ProductCollection;
+use Isotope\Model\ProductCollectionItem;
+use Symfony\Component\Translation\TranslatorInterface;
+
+/**
+ * Class BookingAttributes.
+ */
+class BookingAttribute
+{
+    /**
+     * @var ContaoFramework
+     */
+    private $framework;
+    /**
+     * @var ModelUtil
+     */
+    private $modelUtil;
+    /**
+     * @var TranslatorInterface
+     */
+    private $translator;
+
+    public function __construct(ContaoFramework $framework, ModelUtil $modelUtil, TranslatorInterface $translator)
+    {
+        $this->framework = $framework;
+        $this->modelUtil = $modelUtil;
+        $this->translator = $translator;
+    }
+
+    /**
+     * Validated cart for items with booking option.
+     *
+     * Will add an error to the item, if booking for selected dates is not possible. Will return true otherwise.
+     *
+     * @param ProductCollectionItem $item
+     * @param int                   $quantity
+     *
+     * @return bool
+     */
+    public function validateCart(&$item, $quantity)
+    {
+        $product = $item->getProduct();
+
+        if (!is_a($item, ProductCollectionItem::class) || !$item->hasBooking()) {
+            return true;
+        }
+        $blockedDates = $this->getBlockedDatesWithoutSelf($product, $quantity, $item);
+        $productDates = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock);
+
+        if (\count(array_diff($blockedDates, $productDates)) == \count($blockedDates)) {
+            return true;
+        }
+
+        $item->addError($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => $product->getName()]));
+
+        return false;
+    }
+
+    /**
+     * @param IsotopeProduct             $product
+     * @param int                        $quantity
+     * @param ProductCollectionItemModel $collection
+     *
+     * @return array
+     */
+    public function getBlockedDatesWithoutSelf($product, $quantity, $item)
+    {
+        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?', 'id!=?'], [$product->id, $item->id])) {
+            return [];
+        }
+
+        return $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
+    }
+
+    /**
+     * @param IsotopeProduct $product
+     *
+     * @return array
+     */
+    public function getBlockedDates($product, int $quantity = 1)
+    {
+        /** @var ProductCollectionItem|Collection|null $collectionItems */
+        if (null === ($collectionItems = $this->framework->getAdapter(ProductCollectionItem::class)->findByItem($product->id))) {
+            return $this->getBlockedDatesByProduct($product, $quantity);
+        }
+
+        return $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
+    }
+
+    /**
+     * Returns a list of orders for given products for requested day.
+     *
+     * @return Collection|array|ProductCollection[]|null
+     */
+    public function getOrdersWithBookingsByDay(Product $product, int $day, int $month, int $year)
+    {
+        $orders = [];
+        $start = mktime(0, 0, 0, $month, $day, $year);
+        $end = mktime(23, 59, 59, $month, $day, $year);
+        $items = $this->getBookedItemsInTimeRange($product, $start, $end, true);
+
+        if (!$items) {
+            return $orders;
+        }
+
+        foreach ($items as $item) {
+            $orders[$item->pid]['items'][] = $item;
+            $orders[$item->pid]['order'] = ProductCollection::findOneBy(['id =?', 'type=?'], [$item->pid, 'order']);
+        }
+
+        return $orders;
+    }
+
+    /**
+     * Return a list with number of bookings per day.
+     *
+     * Includes reservations an blocked days.
+     *
+     * @return array
+     */
+    public function getBookingCountsByMonth(Product $product, int $month, int $year)
+    {
+        $firstDay = mktime(0, 0, 0, $month, 1, $year);
+        $monthDays = date('t', mktime(0, 0, 0, $month, 1, $year));
+        $lastDay = mktime(23, 59, 59, $month, $monthDays, $year);
+
+        $bookingList = [];
+        $bookingList['booked'] = $bookingList['blocked'] = $bookingList['reserved'] = array_fill(1, $monthDays, 0);
+        $items = $this->getBookedItemsInTimeRange($product, $firstDay, $lastDay);
+
+        if (!$items) {
+            return $bookingList;
+        }
+
+        foreach ($items as $item) {
+            $range = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock ?: 0);
+            $startDay = date('j', $item->bookingStart);
+            $endDay = date('j', $item->bookingStop);
+
+            foreach ($range as $tstamp) {
+                if ($year == date('Y', $tstamp) && ($month == date('n', $tstamp))) {
+                    $selectedDay = date('j', $tstamp);
+
+                    if ($selectedDay < $startDay || $selectedDay > $endDay) {
+                        ++$bookingList['blocked'][$selectedDay];
+
+                        continue;
+                    }
+                    ++$bookingList['booked'][$selectedDay];
+                }
+            }
+        }
+        $reservedDates = $this->getReservedDates($product);
+
+        foreach ($reservedDates as $reserved) {
+            foreach ($reserved as $tstamp) {
+                if ($year == date('Y', $tstamp) && ($month == date('n', $tstamp))) {
+                    ++$bookingList['reserved'][date('j', $tstamp)];
+                }
+            }
+        }
+
+        return $bookingList;
+    }
+
+    /**
+     * @param Collection     $collectionItems
+     * @param IsotopeProduct $product
+     * @param $quantity
+     *
+     * @return array
+     */
+    public function getBlockedDatesByItems($collectionItems, $product, int $quantity)
+    {
+        $stock = $this->productDataManager->getProductData($product)->stock - $quantity;
+
+        $bookings = $this->getBookings($product, $collectionItems);
+        $reservedDates = $this->getReservedDates($product);
+
+        if (!empty($reservedDates)) {
+            $bookings = $this->mergeBookedWithReserved($bookings, $reservedDates);
+        }
+
+        return $this->getLockedDates($bookings, $stock, $quantity);
+    }
+
+    public function getBlockedDatesByProduct($product, $quantity)
+    {
+        $stock = $this->productDataManager->getProductData($product)->stock - $quantity;
+
+        $reservedDates = $this->getReservedDates($product);
+
+        if (empty($reservedDates)) {
+            return [];
+        }
+
+        return $this->getLockedDates($reservedDates, $stock, $quantity);
+    }
+
+    /**
+     * calculate the bookingRange of a product
+     * if the product has a bookingBlock it as to be added to the bookingStop and subtracted from the bookingStart
+     * bookingBlock means that the product will be blocked for a certain amount of days after it's booking.
+     *
+     * @return array
+     */
+    public function getRange(int $start, int $stop, string $blocking = '')
+    {
+        $bookingStart = '' != $blocking ? $start - ($blocking * 86400) : $start;
+        $bookingStop = '' != $blocking ? $stop + ($blocking * 86400) : $stop;
+
+        return range($bookingStart, $bookingStop, 86400);
+    }
+
+    /**
+     * Split up booking date string to two seperate timestamps.
+     *
+     * @return array
+     */
+    public function splitUpBookingDates(string $booking)
+    {
+        $bookingDates = explode('bis', $booking);
+
+        return [strtotime(trim($bookingDates[0])), strtotime(trim($bookingDates[1]))];
+    }
+
+    /**
+     * @return Collection|ProductCollectionItemModel[]|null
+     */
+    protected function getBookedItemsInTimeRange(ProductModel $product, int $startDate, int $endDate, bool $ignoreBlocking = false)
+    {
+        $searchRange = 0;
+
+        if ($product->bookingBlock && !$ignoreBlocking) {
+            //search block range * 2 to get also overlapping block dates and add 1 day to get the booking date
+            $searchRange = (86400 * $product->bookingBlock * 2) + 1;
+        }
+        $firstDayWithBlocking = $startDate - $searchRange;
+        $lastDayWithBlocking = $endDate + $searchRange;
+
+        return ProductCollectionItemModel::findBy([
+            'product_id = ?',
+            "((bookingStart <= $lastDayWithBlocking AND bookingStop >= $startDate) ".
+            "OR (bookingStart <= $endDate AND bookingStop >= $firstDayWithBlocking) ".
+            "OR (bookingStart <= $startDate AND bookingStop >= $endDate))",
+        ], [
+            (int) $product->id,
+        ]);
+    }
+
+    /**
+     * get the booking dates for a product from collectionItems.
+     *
+     * @param $product
+     *
+     * @return array
+     */
+    protected function getBookings($product, Collection $collectionItems)
+    {
+        $bookings = [];
+
+        foreach ($collectionItems as $booking) {
+            if (!$booking->bookingStart || !$booking->bookingStop) {
+                continue;
+            }
+
+            $range =
+                $this->getRange($booking->bookingStart, $booking->bookingStop, $product->bookingBlock ?: '');
+            $bookings[$booking->id] = $range;
+        }
+
+        return $bookings;
+    }
+
+    /**
+     * get reserved dates from product.
+     *
+     * @param $product
+     *
+     * @return array
+     */
+    protected function getReservedDates($product)
+    {
+        if (!$product->bookingReservedDates) {
+            return [];
+        }
+
+        if (empty($reserved = StringUtil::deserialize($product->bookingReservedDates, true))) {
+            return [];
+        }
+
+        $reservedDates = [];
+
+        foreach ($reserved as $pk) {
+            if (null === ($blockedDates = $this->modelUtil->findModelInstanceByPk('tl_fieldpalette', $pk))) {
+                continue;
+            }
+
+            $range = $this->getRange($blockedDates->start, $blockedDates->stop, $product->bookingBlock ?: '');
+
+            $count = $blockedDates->useCount ? $blockedDates->count : $product->stock;
+
+            for ($i = 0; $i < $count; ++$i) {
+                $reservedDates[] = $range;
+            }
+        }
+
+        return $reservedDates;
+    }
+
+    /**
+     * merge reserved dates into booking array.
+     *
+     * @return array
+     */
+    protected function mergeBookedWithReserved(array $bookings, array $reservedDates)
+    {
+        foreach ($reservedDates as $range) {
+            $bookings[] = $range;
+        }
+
+        return $bookings;
+    }
+
+    /**
+     * get the final locked days for this product.
+     *
+     * @return array
+     */
+    protected function getLockedDates(array $bookings, int $stock, int $quantity)
+    {
+        $counts = [];
+
+        foreach ($bookings as $dates) {
+            foreach ($dates as $date) {
+                $count = 0;
+
+                foreach ($bookings as $compareDates) {
+                    foreach ($compareDates as $compareDate) {
+                        if ($compareDate != $date) {
+                            continue;
+                        }
+
+                        ++$count;
+
+                        $counts[$date] = $count;
+                    }
+                }
+            }
+        }
+
+        $locked = [];
+
+        foreach ($counts as $date => $bookingCount) {
+            if ($date < strtotime('today midnight') || ($stock + $quantity) - $bookingCount > $quantity) {
+                continue;
+            }
+
+            $locked[] = $date;
+        }
+
+        return $locked;
+    }
+}

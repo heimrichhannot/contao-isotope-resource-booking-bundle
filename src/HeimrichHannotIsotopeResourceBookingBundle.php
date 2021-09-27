@@ -12,4 +12,8 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class HeimrichHannotIsotopeResourceBookingBundle extends Bundle
 {
+    public function getPath()
+    {
+        return \dirname(__DIR__);
+    }
 }
