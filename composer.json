@@ -11,6 +11,9 @@
     "isotope/isotope-core": "^2.7",
     "symfony/http-kernel": "^4.4||^5.0"
   },
+  "conflict": {
+    "heimrichhannot/contao-encore-bundle": "<1.5"
+  },
   "autoload": {
     "psr-4": {
       "HeimrichHannot\\IsotopeResourceBookingBundle\\": "src/"

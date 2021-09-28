@@ -6,3 +6,7 @@ services:
 
   HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute:
     public: true
+
+  HeimrichHannot\IsotopeResourceBookingBundle\:
+    resource: "../src/{DataContainer,EventListener}/*"
+    public: true

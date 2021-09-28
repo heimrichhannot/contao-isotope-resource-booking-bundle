@@ -1,8 +1,14 @@
 import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.css"
 import $ from "jquery";
 
 class HeimrichHannotIsotopeResourceBookingBundle
 {
+    init() {
+        this.initBookingPlan();
+        this.registerEvents();
+    }
+
     registerEvents() {
         $(document).on('change', '.quantity_container input', function() {
             HeimrichHannotIsotopeResourceBookingBundle.updateBookingPlan($(this));
@@ -13,7 +19,7 @@ class HeimrichHannotIsotopeResourceBookingBundle
         let input = $(document).find('#bookingPlan'),
             blocked = input.data('blocked');
 
-        self.initFlatpickr(blocked);
+        HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(blocked);
     };
 
     static initFlatpickr(blocked) {
@@ -64,3 +70,6 @@ class HeimrichHannotIsotopeResourceBookingBundle
         return date + 7200;
     };
 }
+
+let instance = new HeimrichHannotIsotopeResourceBookingBundle();
+instance.init();

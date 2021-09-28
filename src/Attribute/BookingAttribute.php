@@ -89,14 +89,17 @@ class BookingAttribute
     }
 
     /**
-     * @param IsotopeProduct $product
-     *
      * @return array
      */
-    public function getBlockedDates($product, int $quantity = 1)
+    public function getBlockedDates(IsotopeProduct $product, int $quantity = 1)
     {
-        /** @var ProductCollectionItem|Collection|null $collectionItems */
-        if (null === ($collectionItems = $this->framework->getAdapter(ProductCollectionItem::class)->findByItem($product->id))) {
+        $collectionItems = $this->modelUtil->findModelInstancesBy(
+            ProductCollectionItem::getTable(),
+            [ProductCollectionItem::getTable().'.product_id=?'],
+            [$product->getId()]
+        );
+
+        if (!$collectionItems) {
             return $this->getBlockedDatesByProduct($product, $quantity);
         }
 
@@ -188,7 +191,7 @@ class BookingAttribute
      */
     public function getBlockedDatesByItems($collectionItems, $product, int $quantity)
     {
-        $stock = $this->productDataManager->getProductData($product)->stock - $quantity;
+        $stock = $product->stock - $quantity;
 
         $bookings = $this->getBookings($product, $collectionItems);
         $reservedDates = $this->getReservedDates($product);
@@ -202,7 +205,7 @@ class BookingAttribute
 
     public function getBlockedDatesByProduct($product, $quantity)
     {
-        $stock = $this->productDataManager->getProductData($product)->stock - $quantity;
+        $stock = $product->stock - $quantity;
 
         $reservedDates = $this->getReservedDates($product);
 

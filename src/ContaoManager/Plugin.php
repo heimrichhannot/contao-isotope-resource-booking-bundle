@@ -30,6 +30,8 @@ class Plugin implements BundlePluginInterface, ConfigPluginInterface
 
     public function registerContainerConfiguration(LoaderInterface $loader, array $managerConfig)
     {
+        $loader->load('@HeimrichHannotIsotopeResourceBookingBundle/config/services.yml');
+
         if (class_exists('HeimrichHannot\EncoreBundle\HeimrichHannotContaoEncoreBundle')) {
             $loader->load('@HeimrichHannotIsotopeResourceBookingBundle/config/config_encore.yml');
         }
