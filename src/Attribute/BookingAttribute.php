@@ -8,7 +8,6 @@
 
 namespace HeimrichHannot\IsotopeResourceBookingBundle\Attribute;
 
-use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\Model\Collection;
 use Contao\StringUtil;
 use HeimrichHannot\UtilsBundle\Model\ModelUtil;
@@ -24,10 +23,6 @@ use Symfony\Component\Translation\TranslatorInterface;
 class BookingAttribute
 {
     /**
-     * @var ContaoFramework
-     */
-    private $framework;
-    /**
      * @var ModelUtil
      */
     private $modelUtil;
@@ -36,9 +31,8 @@ class BookingAttribute
      */
     private $translator;
 
-    public function __construct(ContaoFramework $framework, ModelUtil $modelUtil, TranslatorInterface $translator)
+    public function __construct(ModelUtil $modelUtil, TranslatorInterface $translator)
     {
-        $this->framework = $framework;
         $this->modelUtil = $modelUtil;
         $this->translator = $translator;
     }
@@ -57,9 +51,10 @@ class BookingAttribute
     {
         $product = $item->getProduct();
 
-        if (!is_a($item, ProductCollectionItem::class) || !$item->hasBooking()) {
+        if (!is_a($item, ProductCollectionItem::class) || !$this->itemHasBooking($item)) {
             return true;
         }
+
         $blockedDates = $this->getBlockedDatesWithoutSelf($product, $quantity, $item);
         $productDates = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock);
 
@@ -70,6 +65,20 @@ class BookingAttribute
         $item->addError($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => $product->getName()]));
 
         return false;
+    }
+
+    public function itemHasBooking(ProductCollectionItem $item): bool
+    {
+        if (!$item->bookingStart && !$item->bookingStop) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function itemBookingRange(ProductCollectionItem $item): int
+    {
+        return ceil(($item->bookingStop - $item->bookingStart) / 86400) + 1;
     }
 
     /**
