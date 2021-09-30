@@ -23,24 +23,30 @@ class HeimrichHannotIsotopeResourceBookingBundle
     };
 
     static initFlatpickr(blocked) {
-        flatpickr('#bookingPlan', {
-            dateFormat: 'd.m.Y',
-            minDate: 'today',
-            mode: 'range',
-            inline: true,
-            locale: 'de',
-            onDayCreate: function(dObj, dStr, fp, dayElem) {
-                var date = dayElem.dateObj;
+        let lang = document.querySelector('html').getAttribute('lang');
 
-                var dateString = HeimrichHannotIsotopeResourceBookingBundle.getComparableDate(date.getTime());
+        import(/* webpackChunkName: "flatpickr-[request]" */ 'flatpickr/dist/l10n/' + lang + '.js').then((locale) =>
+        {
+            // flatpickr.localize(locale.default[locale]);
+            flatpickr('#bookingPlan', {
+                dateFormat: 'd.m.Y',
+                minDate: 'today',
+                locale: lang,
+                mode: 'range',
+                inline: true,
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    var date = dayElem.dateObj;
 
-                $.each(blocked, function(key, value) {
-                    // need to convert to date string since tstamps could be in different timezone format
-                    if (moment.unix(value).format('DD.MM.YYYY') == moment.unix(dateString).format('DD.MM.YYYY')) {
-                        dayElem.className += ' disabled blocked';
-                    }
-                });
-            },
+                    var dateString = HeimrichHannotIsotopeResourceBookingBundle.getComparableDate(date.getTime());
+
+                    $.each(blocked, function(key, value) {
+                        // need to convert to date string since tstamps could be in different timezone format
+                        if (moment.unix(value).format('DD.MM.YYYY') == moment.unix(dateString).format('DD.MM.YYYY')) {
+                            dayElem.className += ' disabled blocked';
+                        }
+                    });
+                },
+            });
         });
     };
 
