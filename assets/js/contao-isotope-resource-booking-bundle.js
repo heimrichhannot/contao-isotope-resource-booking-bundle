@@ -1,6 +1,7 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css"
 import $ from "jquery";
+import moment from 'moment';
 
 class HeimrichHannotIsotopeResourceBookingBundle
 {
@@ -42,7 +43,7 @@ class HeimrichHannotIsotopeResourceBookingBundle
                     $.each(blocked, function(key, value) {
                         // need to convert to date string since tstamps could be in different timezone format
                         if (moment.unix(value).format('DD.MM.YYYY') == moment.unix(dateString).format('DD.MM.YYYY')) {
-                            dayElem.className += ' disabled blocked';
+                            dayElem.className += ' flatpickr-disabled blocked';
                         }
                     });
                 },

@@ -9,12 +9,6 @@
 use HeimrichHannot\IsotopeResourceBookingBundle\EventListener\Isotope\CalculatePriceListener;
 use HeimrichHannot\IsotopeResourceBookingBundle\EventListener\Isotope\PostAddProductToCollectionListener;
 use HeimrichHannot\IsotopeResourceBookingBundle\EventListener\Isotope\PreCheckoutListener;
-use Isotope\Frontend\ProductAction\Registry;
-
-/*
- * Product actions
- */
-Registry::add(new \HeimrichHannot\IsotopeResourceBookingBundle\Action\BookingPlanAction());
 
 /*
  * Isotope Hooks

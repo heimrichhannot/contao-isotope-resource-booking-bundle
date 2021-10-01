@@ -10,15 +10,33 @@ namespace HeimrichHannot\IsotopeResourceBookingBundle\Action;
 
 use Contao\Controller;
 use Contao\Input;
-use Contao\System;
+use HeimrichHannot\EncoreBundle\Asset\FrontendAsset;
 use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
+use HeimrichHannot\UtilsBundle\Url\UrlUtil;
 use Isotope\Frontend\ProductAction\CartAction;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Isotope;
 use Isotope\Message;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingPlanAction extends CartAction
 {
+    protected BookingAttribute $bookingAttribute;
+    protected UrlGeneratorInterface $urlGenerator;
+    protected TranslatorInterface $translator;
+    protected FrontendAsset $frontendAsset;
+    protected UrlUtil $urlUtil;
+
+    public function __construct(BookingAttribute $bookingAttribute, UrlGeneratorInterface $urlGenerator, TranslatorInterface $translator, FrontendAsset $frontendAsset, UrlUtil $urlUtil)
+    {
+        $this->bookingAttribute = $bookingAttribute;
+        $this->urlGenerator = $urlGenerator;
+        $this->translator = $translator;
+        $this->frontendAsset = $frontendAsset;
+        $this->urlUtil = $urlUtil;
+    }
+
     public function getName()
     {
         return 'edit_booking_plan';
@@ -31,16 +49,14 @@ class BookingPlanAction extends CartAction
 
     public function getBlockedDates($product)
     {
-        return System::getContainer()->get(BookingAttribute::class)->getBlockedDates($product);
+        return $this->bookingAttribute->getBlockedDates($product);
     }
 
     public function generate(IsotopeProduct $product, array $config = [])
     {
-        if (System::getContainer()->has('huh.encore.asset.frontend')) {
-            System::getContainer()->get('huh.encore.asset.frontend')->addActiveEntrypoint('contao-isotope-resource-booking-bundle');
-        }
+        $this->frontendAsset->addActiveEntrypoint('contao-isotope-resource-booking-bundle');
 
-        $url = System::getContainer()->get('contao.routing.url_generator')->generate('huh_isotope_resource_booking_blocked_dates');
+        $url = $this->urlGenerator->generate('huh_isotope_resource_booking_blocked_dates');
 
         return sprintf(
                     '<div class="bookingPlan_container" data-update="%s" data-product-id="%s">
@@ -63,7 +79,7 @@ class BookingPlanAction extends CartAction
     public function handleSubmit(IsotopeProduct $product, array $config = [])
     {
         if (empty($_POST[$this->getName()])) {
-            Message::addError(System::getContainer()->get('translator')->trans('huh.isotope.collection.booking.error.emptySelection'));
+            Message::addError($this->translator->trans('huh.isotope.collection.booking.error.emptySelection'));
 
             return false;
         }
@@ -76,11 +92,11 @@ class BookingPlanAction extends CartAction
                 Controller::reload();
             }
 
-            if (null === ($jumpToPage = System::getContainer()->get('huh.utils.url')->getJumpToPageObject($config['module']->iso_addProductJumpTo))) {
+            if (null === ($jumpToPage = $this->urlUtil->getJumpToPageObject($config['module']->iso_addProductJumpTo))) {
                 Controller::reload();
             }
 
-            System::getContainer()->get('huh.utils.url')->redirect($jumpToPage->alias);
+            $this->urlUtil->redirect($jumpToPage->alias);
         } else {
             return false;
         }

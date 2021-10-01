@@ -25,6 +25,10 @@ class CalculatePriceListener
         $product = $objSource->getRelated('pid');
         $item = Isotope::getCart()->getItemForProduct($product);
 
+        if (!$item) {
+            return $fltPrice;
+        }
+
         if (!$this->bookingAttribute->itemHasBooking($item)) {
             return $fltPrice;
         }
