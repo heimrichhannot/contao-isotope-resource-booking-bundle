@@ -17,6 +17,7 @@ use Isotope\Frontend\ProductAction\CartAction;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Isotope;
 use Isotope\Message;
+use Isotope\Model\ProductCollectionItem;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -121,6 +122,12 @@ class BookingPlanAction extends CartAction
             return false;
         }
 
+        if ($item) {
+            if (false === $this->bookingAttribute->validateCart($item, $quantity)) {
+                return false;
+            }
+        }
+
         if ($item->hasErrors()) {
             Message::addError($item->getErrors()[0]);
 
@@ -130,5 +137,27 @@ class BookingPlanAction extends CartAction
         Message::addConfirmation($GLOBALS['TL_LANG']['MSC']['addedToCart']);
 
         return true;
+    }
+
+    /**
+     * @return ProductCollectionItem|null
+     */
+    private function getCurrentCartItem(IsotopeProduct $product = null)
+    {
+        if (null === $product || !\Input::get('collection_item')) {
+            return null;
+        }
+
+        /** @var ProductCollectionItem $item */
+        $item = ProductCollectionItem::findByPk(\Input::get('collection_item'));
+
+        if ($item->pid == Isotope::getCart()->id
+            && $item->hasProduct()
+            && $item->getProduct()->getProductId() == $product->getProductId()
+        ) {
+            return $item;
+        }
+
+        return null;
     }
 }
