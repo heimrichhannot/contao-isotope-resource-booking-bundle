@@ -37,28 +37,33 @@ class BookingAttribute
         $this->translator = $translator;
     }
 
+    public function checkProductBookingDates(IsotopeProduct $product, int $startDate, int $endDate, int $quantity = 1): bool
+    {
+        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?'], [$product->id])) {
+            return true;
+        }
+
+        return $this->isBlockedForItems($collectionItems, $product, $quantity, $startDate, $endDate);
+    }
+
     /**
      * Validated cart for items with booking option.
      *
      * Will add an error to the item, if booking for selected dates is not possible. Will return true otherwise.
-     *
-     * @param ProductCollectionItem $item
-     * @param int                   $quantity
-     *
-     * @return bool
      */
-    public function validateCart(&$item, $quantity)
+    public function validateCart(ProductCollectionItem &$item, int $quantity): bool
     {
         $product = $item->getProduct();
 
-        if (!is_a($item, ProductCollectionItem::class) || !$this->itemHasBooking($item)) {
+        if (!$this->itemHasBooking($item)) {
             return true;
         }
 
-        $blockedDates = $this->getBlockedDatesWithoutSelf($product, $quantity, $item);
-        $productDates = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock);
+        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?', 'id!=?'], [$product->id, $item->id])) {
+            return true;
+        }
 
-        if (\count(array_diff($blockedDates, $productDates)) == \count($blockedDates)) {
+        if ($this->isBlockedForItems($collectionItems, $product, $quantity, $item->bookingStart, $item->bookingStop)) {
             return true;
         }
 
@@ -82,25 +87,9 @@ class BookingAttribute
     }
 
     /**
-     * @param IsotopeProduct             $product
-     * @param int                        $quantity
-     * @param ProductCollectionItemModel $collection
-     *
      * @return array
      */
-    public function getBlockedDatesWithoutSelf($product, $quantity, $item)
-    {
-        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?', 'id!=?'], [$product->id, $item->id])) {
-            return [];
-        }
-
-        return $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
-    }
-
-    /**
-     * @return array
-     */
-    public function getBlockedDates(IsotopeProduct $product, int $quantity = 1)
+    public function getBlockedDates(IsotopeProduct $product, int $quantity = 1, array $options = [])
     {
         $collectionItems = $this->modelUtil->findModelInstancesBy(
             ProductCollectionItem::getTable(),
@@ -109,10 +98,10 @@ class BookingAttribute
         );
 
         if (!$collectionItems) {
-            return $this->getBlockedDatesByProduct($product, $quantity);
+            return $this->getBlockedDatesByProduct($product, $quantity, $options);
         }
 
-        return $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
+        return $this->getBlockedDatesByItems($collectionItems, $product, $quantity, $options);
     }
 
     /**
@@ -146,8 +135,13 @@ class BookingAttribute
      *
      * @return array
      */
-    public function getBookingCountsByMonth(Product $product, int $month, int $year)
+    public function getBookingCountsByMonth(Product $product, int $month, int $year, array $options = [])
     {
+        $defaults = [
+            'double_blocked_value' => false,
+        ];
+        $options = array_merge($defaults, $options);
+
         $firstDay = mktime(0, 0, 0, $month, 1, $year);
         $monthDays = date('t', mktime(0, 0, 0, $month, 1, $year));
         $lastDay = mktime(23, 59, 59, $month, $monthDays, $year);
@@ -161,7 +155,7 @@ class BookingAttribute
         }
 
         foreach ($items as $item) {
-            $range = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock ?: 0);
+            $range = $this->getRange($item->bookingStart, $item->bookingStop, $product->bookingBlock ?: 0, $options);
             $startDay = date('j', $item->bookingStart);
             $endDay = date('j', $item->bookingStop);
 
@@ -198,12 +192,12 @@ class BookingAttribute
      *
      * @return array
      */
-    public function getBlockedDatesByItems($collectionItems, $product, int $quantity)
+    public function getBlockedDatesByItems($collectionItems, $product, int $quantity, array $options = [])
     {
         $stock = $product->stock - $quantity;
 
-        $bookings = $this->getBookings($product, $collectionItems);
-        $reservedDates = $this->getReservedDates($product);
+        $bookings = $this->getBookings($product, $collectionItems, $options);
+        $reservedDates = $this->getReservedDates($product, $options);
 
         if (!empty($reservedDates)) {
             $bookings = $this->mergeBookedWithReserved($bookings, $reservedDates);
@@ -212,11 +206,11 @@ class BookingAttribute
         return $this->getLockedDates($bookings, $stock, $quantity);
     }
 
-    public function getBlockedDatesByProduct($product, $quantity)
+    public function getBlockedDatesByProduct($product, $quantity, array $options = [])
     {
         $stock = $product->stock - $quantity;
 
-        $reservedDates = $this->getReservedDates($product);
+        $reservedDates = $this->getReservedDates($product, $options);
 
         if (empty($reservedDates)) {
             return [];
@@ -232,10 +226,19 @@ class BookingAttribute
      *
      * @return array
      */
-    public function getRange(int $start, int $stop, string $blocking = '')
+    public function getRange(int $start, int $stop, int $blocking = 0, array $options = [])
     {
-        $bookingStart = '' != $blocking ? $start - ($blocking * 86400) : $start;
-        $bookingStop = '' != $blocking ? $stop + ($blocking * 86400) : $stop;
+        $defaults = [
+            'double_blocked_value' => false,
+        ];
+        $options = array_merge($defaults, $options);
+
+        if (true === $options['double_blocked_value']) {
+            $blocking = $blocking * 2;
+        }
+
+        $bookingStart = $blocking > 0 ? $start - ($blocking * 86400) : $start;
+        $bookingStop = $blocking > 0 ? $stop + ($blocking * 86400) : $stop;
 
         return range($bookingStart, $bookingStop, 86400);
     }
@@ -277,37 +280,13 @@ class BookingAttribute
     }
 
     /**
-     * get the booking dates for a product from collectionItems.
-     *
-     * @param $product
-     *
-     * @return array
-     */
-    protected function getBookings($product, Collection $collectionItems)
-    {
-        $bookings = [];
-
-        foreach ($collectionItems as $booking) {
-            if (!$booking->bookingStart || !$booking->bookingStop) {
-                continue;
-            }
-
-            $range =
-                $this->getRange($booking->bookingStart, $booking->bookingStop, $product->bookingBlock ?: '');
-            $bookings[$booking->id] = $range;
-        }
-
-        return $bookings;
-    }
-
-    /**
      * get reserved dates from product.
      *
      * @param $product
      *
      * @return array
      */
-    protected function getReservedDates($product)
+    protected function getReservedDates($product, array $options = [])
     {
         if (!$product->bookingReservedDates) {
             return [];
@@ -324,7 +303,7 @@ class BookingAttribute
                 continue;
             }
 
-            $range = $this->getRange($blockedDates->start, $blockedDates->stop, $product->bookingBlock ?: '');
+            $range = $this->getRange($blockedDates->start, $blockedDates->stop, $product->bookingBlock ?: 0, $options);
 
             $count = $blockedDates->useCount ? $blockedDates->count : $product->stock;
 
@@ -334,6 +313,35 @@ class BookingAttribute
         }
 
         return $reservedDates;
+    }
+
+    /**
+     * get the booking dates for a product from collectionItems.
+     *
+     * @param $product
+     *
+     * @return array
+     */
+    protected function getBookings($product, Collection $collectionItems, array $options = [])
+    {
+        $defaults = [
+            'double_blocked_value' => false,
+        ];
+        $options = array_merge($defaults, $options);
+
+        $bookings = [];
+
+        foreach ($collectionItems as $booking) {
+            if (!$booking->bookingStart || !$booking->bookingStop) {
+                continue;
+            }
+
+            $range =
+                $this->getRange($booking->bookingStart, $booking->bookingStop, $product->bookingBlock ?: 0, $options);
+            $bookings[$booking->id] = $range;
+        }
+
+        return $bookings;
     }
 
     /**
@@ -388,5 +396,25 @@ class BookingAttribute
         }
 
         return $locked;
+    }
+
+    /**
+     * @param $collectionItems
+     */
+    private function isBlockedForItems($collectionItems, IsotopeProduct $product, int $quantity, int $startDate, int $endDate, array $options = []): bool
+    {
+        $defaults = [
+            'double_blocked_value' => false,
+        ];
+        $options = array_merge($defaults, $options);
+
+        $blockedDates = $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
+        $productDates = $this->getRange($startDate, $endDate, $product->bookingBlock, $options);
+
+        if (\count(array_diff($blockedDates, $productDates)) == \count($blockedDates)) {
+            return true;
+        }
+
+        return false;
     }
 }

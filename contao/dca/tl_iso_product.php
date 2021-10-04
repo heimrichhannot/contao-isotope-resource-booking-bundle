@@ -28,9 +28,12 @@ $fields = [
     'bookingBlock' => [
         'label' => &$GLOBALS['TL_LANG']['tl_iso_product']['bookingBlock'],
         'inputType' => 'text',
-        'eval' => ['tl_class' => 'w50'],
+        'eval' => [
+            'tl_class' => 'w50',
+            'rgxp' => 'natural',
+        ],
         'attributes' => ['legend' => 'inventory_legend'],
-        'sql' => "varchar(8) NOT NULL default ''",
+        'sql' => "int(10) unsigned NOT NULL default '0'",
     ],
     'bookingReservedDates' => [
         'label' => &$GLOBALS['TL_LANG']['tl_iso_product']['bookingReservedDates'],
