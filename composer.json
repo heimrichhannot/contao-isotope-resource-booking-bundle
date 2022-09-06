@@ -10,7 +10,8 @@
     "heimrichhannot/contao-encore-bundle": "^1.6",
     "heimrichhannot/contao-utils-bundle": "^2.200",
     "isotope/isotope-core": "^2.7",
-    "symfony/http-kernel": "^4.4||^5.0"
+    "symfony/http-kernel": "^4.4||^5.0",
+    "symfony/translation-contracts": "^1.0 || ^2.0 || ^3.0"
   },
   "conflict": {
     "heimrichhannot/contao-encore-bundle": "<1.5"
