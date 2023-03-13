@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2023-02-13
+- Fixed: undefined method call exception ([#3])
+
 ## [0.1.2] - 2022-09-06
 - Fixed: symfony 5 compatibility ([#2])
 
@@ -15,4 +18,5 @@ All notable changes to this project will be documented in this file.
 Migrated from Isotope Bundle
 
 
+[#3]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/3
 [#2]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/2

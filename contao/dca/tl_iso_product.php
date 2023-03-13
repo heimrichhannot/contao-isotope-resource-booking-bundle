@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2023 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -95,7 +95,7 @@ $fields = [
     'bookingOverview' => [
         'inputType' => 'huh_be_explanation',
         'eval' => [
-            'text_callback' => [IsoProductContainer::class, 'getBookingOverview'],
+            'text_callback' => [IsoProductContainer::class, 'onBookingOverviewTextCallback'],
         ],
         'attributes' => ['legend' => 'inventory_legend'],
     ],
