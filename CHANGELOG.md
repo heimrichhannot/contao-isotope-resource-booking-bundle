@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2023-03-17
+- Fixed: wrong class used ([#5])
+
 ## [0.1.4] - 2023-03-16 
 - Fixed: internal error([#4])
 
@@ -21,6 +24,7 @@ All notable changes to this project will be documented in this file.
 Migrated from Isotope Bundle
 
 
+[#5]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/5
 [#4]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/4
 [#3]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/3
 [#2]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/2

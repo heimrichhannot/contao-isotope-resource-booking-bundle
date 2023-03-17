@@ -256,7 +256,7 @@ class BookingAttribute
     }
 
     /**
-     * @return Collection|ProductCollectionItemModel[]|null
+     * @return Collection|ProductCollectionItem[]|null
      */
     protected function getBookedItemsInTimeRange(Product $product, int $startDate, int $endDate, bool $ignoreBlocking = false)
     {
@@ -269,7 +269,7 @@ class BookingAttribute
         $firstDayWithBlocking = $startDate - $searchRange;
         $lastDayWithBlocking = $endDate + $searchRange;
 
-        return ProductCollectionItemModel::findBy([
+        return ProductCollectionItem::findBy([
             'product_id = ?',
             "((bookingStart <= $lastDayWithBlocking AND bookingStop >= $startDate) ".
             "OR (bookingStart <= $endDate AND bookingStop >= $firstDayWithBlocking) ".
