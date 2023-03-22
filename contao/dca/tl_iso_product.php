@@ -36,7 +36,6 @@ $fields = [
         'sql' => "int(10) unsigned NOT NULL default '0'",
     ],
     'bookingReservedDates' => [
-        'label' => &$GLOBALS['TL_LANG']['tl_iso_product']['bookingReservedDates'],
         'inputType' => 'fieldpalette',
         'foreignKey' => 'tl_fieldpalette.id',
         'relation' => ['type' => 'hasMany', 'load' => 'eager'],

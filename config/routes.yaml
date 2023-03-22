@@ -1,0 +1,4 @@
+# config/routes.yaml
+huh.isotope_resource_booking.controller:
+  resource: ../src/Controller
+  type: annotation

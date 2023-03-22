@@ -2,13 +2,9 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
-    public: false
     bind:
       $urlGenerator: '@contao.routing.url_generator'
 
-  HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute:
-    public: true
-
   HeimrichHannot\IsotopeResourceBookingBundle\:
-    resource: "../src/{Action,DataContainer,EventListener}/*"
+    resource: "../src/{Action,Attribute,Controller,DataContainer,EventListener}/*"
     public: true
