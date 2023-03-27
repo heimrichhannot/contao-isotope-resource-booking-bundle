@@ -95,6 +95,7 @@ $fields = [
         'inputType' => 'huh_be_explanation',
         'eval' => [
             'text_callback' => [IsoProductContainer::class, 'onBookingOverviewTextCallback'],
+            'tl_class' => 'clr',
         ],
         'attributes' => ['legend' => 'inventory_legend'],
     ],
