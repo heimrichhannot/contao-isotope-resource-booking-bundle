@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2023-03-29
+- Fixed: backend widget not working ([#7], [#8])
+- Fixed: palette issues in backend ([#7], [#8])
+- Fixed: missing translation keys  ([#7], [#8])
+
 ## [0.1.6] - 2023-03-22
 - Fixed: unknown column exception ([#6])
 - Fixed: routes not correctly registered
@@ -28,6 +33,8 @@ All notable changes to this project will be documented in this file.
 Migrated from Isotope Bundle
 
 
+[#8]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/pull/8
+[#7]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/7
 [#6]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/6
 [#5]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/5
 [#4]: https://github.com/heimrichhannot/contao-isotope-resource-booking-bundle/issues/4
