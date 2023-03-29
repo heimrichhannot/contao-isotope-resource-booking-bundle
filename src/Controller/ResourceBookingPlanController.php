@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (c) 2021 Heimrich & Hannot GmbH
+ * Copyright (c) 2023 Heimrich & Hannot GmbH
  *
  * @license LGPL-3.0-or-later
  */
@@ -54,10 +54,8 @@ class ResourceBookingPlanController extends AbstractController
 
     /**
      * @Route("/bookinglist", name="bookinglist", defaults={"_scope" = "backend", "_token_check" = true})
-     *
-     * @return array
      */
-    public function bookingList(Request $request)
+    public function bookingList(Request $request): Response
     {
         if (!$this->framework->isInitialized()) {
             $this->framework->initialize();
@@ -65,7 +63,10 @@ class ResourceBookingPlanController extends AbstractController
         $id = $request->get('id');
 
         if (!is_numeric($id) | !$product = Product::findById($id)) {
-            return ['error' => $this->translator->trans('Invalid id')];
+            return $this->render(
+                '@HeimrichHannotIsotopeResourceBooking/backend/bookinglist.html.twig',
+                ['error' => $this->translator->trans('Invalid id')]
+            );
         }
         $day = is_numeric($request->get('day')) ? (int) $request->get('day') : date('d');
         $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
@@ -73,34 +74,32 @@ class ResourceBookingPlanController extends AbstractController
         $orders = $this->bookingAttribute->getOrdersWithBookingsByDay($product, $day, $month, $year);
         $date = mktime(0, 0, 0, $month, $day, $year);
 
-        return [
+        return $this->render('@HeimrichHannotIsotopeResourceBooking/backend/bookinglist.html.twig', [
             'product' => $product,
             'orders' => $orders,
             'tstamp' => $date,
-        ];
+        ]);
     }
 
     /**
      * @Route("/bookingoverview", name="bookingoverview", defaults={"_scope" = "backend", "_token_check" = true})
-     *
-     * @return array
      */
-    public function bookingOverviewAction(Request $request)
+    public function bookingOverviewAction(Request $request): Response
     {
         $id = $request->get('id');
 
         if (!is_numeric($id) | !$product = Product::findById($id)) {
-            return ['error' => $this->translator->trans('Invalid id')];
+            throw new \Exception($this->translator->trans('Invalid id'));
         }
         $bookings = $this->bookingAttribute->getBookingCountsByMonth($product, date('n'), date('Y'));
         $year = is_numeric($request->get('year')) ? (int) $request->get('year') : date('Y');
         $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
         $date = mktime(0, 0, 0, $month, 1, $year);
 
-        return [
+        return $this->render('@HeimrichHannotIsotopeResourceBooking/attribute/bookingoverview.html.twig', [
             'bookings' => $bookings,
             'product' => $product,
             'time' => $date,
-        ];
+        ]);
     }
 }

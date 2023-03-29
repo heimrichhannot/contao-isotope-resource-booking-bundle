@@ -18,6 +18,7 @@
             <tr>
                 <th colspan="7" class="tl_header">
                     {{ time|date('F')|trans }}
+
                     <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
                         'id': product.id,
                         'month': time|date_modify("-1 month")|date('n'),
