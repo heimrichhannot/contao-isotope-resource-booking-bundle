@@ -5,6 +5,12 @@ huh.isotope:
       error:
         overbooked: 'Der gewünschte Zeitraum für das Produkt %product% kann leider nicht mehr gebucht werden, da es keine freien Kapazitäten mehr gibt.'
         emptySelection: 'Es wurden keine Buchungsdaten ausgewählt.'
+    table.label:
+      orderDate: Bestelldatum
+      customer: Kunde
+      orderNumber: Bestellnummer
+      total: Gesamt
+      status: Status
   product:
     booking:
       plan: Buchungplan
@@ -12,3 +18,6 @@ huh.isotope:
       booked: Gebucht
       reserved: Reserviert
       blocked: Blockiert
+  order:
+    billingaddress: Rechnungsadresse
+    bookingdate: Buchungszeitraum

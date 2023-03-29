@@ -54,10 +54,8 @@ class ResourceBookingPlanController extends AbstractController
 
     /**
      * @Route("/bookinglist", name="bookinglist", defaults={"_scope" = "backend", "_token_check" = true})
-     *
-     * @return array
      */
-    public function bookingList(Request $request)
+    public function bookingList(Request $request): Response
     {
         if (!$this->framework->isInitialized()) {
             $this->framework->initialize();
@@ -65,7 +63,10 @@ class ResourceBookingPlanController extends AbstractController
         $id = $request->get('id');
 
         if (!is_numeric($id) | !$product = Product::findById($id)) {
-            return ['error' => $this->translator->trans('Invalid id')];
+            return $this->render(
+                '@HeimrichHannotIsotopeResourceBooking/backend/bookinglist.html.twig',
+                ['error' => $this->translator->trans('Invalid id')]
+            );
         }
         $day = is_numeric($request->get('day')) ? (int) $request->get('day') : date('d');
         $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
@@ -73,11 +74,11 @@ class ResourceBookingPlanController extends AbstractController
         $orders = $this->bookingAttribute->getOrdersWithBookingsByDay($product, $day, $month, $year);
         $date = mktime(0, 0, 0, $month, $day, $year);
 
-        return [
+        return $this->render('@HeimrichHannotIsotopeResourceBooking/backend/bookinglist.html.twig', [
             'product' => $product,
             'orders' => $orders,
             'tstamp' => $date,
-        ];
+        ]);
     }
 
     /**
