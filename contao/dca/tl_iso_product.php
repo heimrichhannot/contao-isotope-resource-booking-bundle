@@ -26,10 +26,9 @@ $fields = [
         'sql' => "varchar(16) NOT NULL default ''",
     ],
     'bookingBlock' => [
-        'label' => &$GLOBALS['TL_LANG']['tl_iso_product']['bookingBlock'],
         'inputType' => 'text',
         'eval' => [
-            'tl_class' => 'w50',
+            'tl_class' => 'w50 clr',
             'rgxp' => 'natural',
         ],
         'attributes' => ['legend' => 'inventory_legend'],

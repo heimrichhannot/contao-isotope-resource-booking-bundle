@@ -52,6 +52,7 @@ class IsoProductContainer
             'time' => $date,
             'bookings' => $bookings,
             'product' => $product,
+            'month' => $month-1,
         ]);
     }
 }

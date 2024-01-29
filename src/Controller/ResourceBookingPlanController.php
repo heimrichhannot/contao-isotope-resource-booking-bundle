@@ -102,6 +102,7 @@ class ResourceBookingPlanController extends AbstractController
             'bookings' => $bookings,
             'product' => $product,
             'time' => $date,
+            'month' => $month-1,
         ]);
     }
 }

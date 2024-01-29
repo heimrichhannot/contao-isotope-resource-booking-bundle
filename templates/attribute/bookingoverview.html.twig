@@ -17,7 +17,7 @@
         <thead>
             <tr>
                 <th colspan="7" class="tl_header">
-                    {{ time|date('F')|trans }}
+                    {{ ('MONTHS.' ~ month)|trans({}, 'contao_default') }}
 
                     <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
                         'id': product.id,

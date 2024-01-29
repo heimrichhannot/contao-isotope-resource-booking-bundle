@@ -30,7 +30,7 @@ class PreCheckoutListener
      * @param Order|null $order
      * @param Checkout   $checkout
      */
-    public function __invoke($order, $checkout): bool
+    public function __invoke(?Order $order, Checkout $checkout): bool
     {
         foreach ($order->getItems() as $item) {
             if (false === $this->bookingAttribute->validateCart($item, $item->quantity)) {
