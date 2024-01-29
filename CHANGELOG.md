@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 - Fixed: backend booking widget not showing correct time
 - Fixed: missing alt texts on backend widget
 - Fixed: missing translations for backend widget
+- Fixed: broken navigation in backend widget
+- Fixed: missing dependency for fieldpalette
 
 ## [0.1.7] - 2023-03-29
 - Fixed: backend widget not working ([#7], [#8])

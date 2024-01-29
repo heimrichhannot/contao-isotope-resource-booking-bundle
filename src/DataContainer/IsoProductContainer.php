@@ -9,21 +9,20 @@
 namespace HeimrichHannot\IsotopeResourceBookingBundle\DataContainer;
 
 use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
+use HeimrichHannot\IsotopeResourceBookingBundle\Controller\ResourceBookingPlanController;
 use Isotope\Model\Product;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 
 class IsoProductContainer
 {
-    protected BookingAttribute $bookingAttribute;
-    protected Environment      $twig;
     private RequestStack       $requestStack;
+    private ResourceBookingPlanController $resourceBookingPlanController;
 
-    public function __construct(BookingAttribute $bookingAttribute, Environment $twig, RequestStack $requestStack)
+    public function __construct(RequestStack $requestStack, ResourceBookingPlanController $resourceBookingPlanController)
     {
-        $this->bookingAttribute = $bookingAttribute;
-        $this->twig = $twig;
         $this->requestStack = $requestStack;
+        $this->resourceBookingPlanController = $resourceBookingPlanController;
     }
 
     /**
@@ -44,15 +43,6 @@ class IsoProductContainer
             [$month, $year] = explode('_', $value);
         }
 
-        $date = mktime(0, 0, 0, $month, 1, $year);
-
-        $bookings = $this->bookingAttribute->getBookingCountsByMonth($product, $month, $year);
-
-        return $this->twig->render('@HeimrichHannotIsotopeResourceBooking/attribute/bookingoverview.html.twig', [
-            'time' => $date,
-            'bookings' => $bookings,
-            'product' => $product,
-            'month' => $month-1,
-        ]);
+        return $this->resourceBookingPlanController->renderBookingOverview($product, $month, $year);
     }
 }

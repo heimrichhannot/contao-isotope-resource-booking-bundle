@@ -10,7 +10,6 @@ namespace HeimrichHannot\IsotopeResourceBookingBundle\Controller;
 
 use Contao\CoreBundle\Framework\ContaoFramework;
 use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
-use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use Isotope\Model\Product;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,23 +17,24 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
  * @Route("/huh_isotope_resource_booking", name="huh_isotope_resource_booking_")
  */
 class ResourceBookingPlanController extends AbstractController
 {
-    protected ModelUtil $modelUtil;
     protected BookingAttribute $bookingAttribute;
     protected ContaoFramework $framework;
     protected TranslatorInterface $translator;
+    private Environment $twig;
 
-    public function __construct(ModelUtil $modelUtil, BookingAttribute $bookingAttribute, ContaoFramework $framework, TranslatorInterface $translator)
+    public function __construct(BookingAttribute $bookingAttribute, ContaoFramework $framework, TranslatorInterface $translator, Environment $twig)
     {
-        $this->modelUtil = $modelUtil;
         $this->bookingAttribute = $bookingAttribute;
         $this->framework = $framework;
         $this->translator = $translator;
+        $this->twig = $twig;
     }
 
     /**
@@ -42,7 +42,8 @@ class ResourceBookingPlanController extends AbstractController
      */
     public function blockedDates(Request $request): Response
     {
-        $product = $this->modelUtil->findModelInstanceByPk('tl_iso_product', $request->get('productId'));
+        /** @var Product|null $product */
+        $product = Product::findByPk($request->get('productId'));
 
         if (!$product) {
             return new Response('Product not found.', 404);
@@ -94,15 +95,38 @@ class ResourceBookingPlanController extends AbstractController
 
         $year = is_numeric($request->get('year')) ? (int) $request->get('year') : date('Y');
         $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
+
+        return new Response($this->renderBookingOverview($product, $month, $year));
+    }
+
+    public function renderBookingOverview(Product $product, int $month, int $year): string
+    {
         $date = mktime(0, 0, 0, $month, 1, $year);
 
         $bookings = $this->bookingAttribute->getBookingCountsByMonth($product, $month, $year);
 
-        return $this->render('@HeimrichHannotIsotopeResourceBooking/attribute/bookingoverview.html.twig', [
+
+        $lastMonth = strtotime('-1 month', $date);
+        $urlLastMonth = $this->generateUrl('huh_isotope_resource_booking_bookingoverview', [
+            'id' => $product->id,
+            'month' => date('n', $lastMonth),
+            'year' => date('Y', $lastMonth),
+        ]);
+
+        $nextMonth = strtotime('+1 month', $date);
+        $urlNextMonth = $this->generateUrl('huh_isotope_resource_booking_bookingoverview', [
+            'id' => $product->id,
+            'month' => date('n', $nextMonth),
+            'year' => date('Y', $nextMonth),
+        ]);
+
+        return $this->twig->render('@HeimrichHannotIsotopeResourceBooking/attribute/bookingoverview.html.twig', [
+            'time' => $date,
             'bookings' => $bookings,
             'product' => $product,
-            'time' => $date,
             'month' => $month-1,
+            'urlLastMonth' => $urlLastMonth,
+            'urlNextMonth' => $urlNextMonth,
         ]);
     }
 }

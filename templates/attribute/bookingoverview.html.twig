@@ -17,18 +17,10 @@
         <thead>
             <tr>
                 <th colspan="7" class="tl_header">
-                    {{ ('MONTHS.' ~ month)|trans({}, 'contao_default') }}
+                    {{ ('MONTHS.' ~ month)|trans({}, 'contao_default') }} {{ time|date('Y') }}
 
-                    <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
-                        'id': product.id,
-                        'month': time|date_modify("-1 month")|date('n'),
-                        'year': time|date_modify("- 1 month")|date('Y')
-                    }) }}" id="huh_isotope_bookingoverview_prev"><img src="system/themes/flexible/icons/movel.svg"></a>
-                    <a href="{{ path('huh_isotope_resource_booking_bookingoverview', {
-                        'id': product.id,
-                        'month': time|date_modify("+1 month")|date('n'),
-                        'year': time|date_modify("+ 1 month")|date('Y')
-                    }) }}" id="huh_isotope_bookingoverview_next"><img src="system/themes/flexible/icons/mover.svg"></a>
+                    <a href="{{ urlLastMonth }}" id="huh_isotope_bookingoverview_prev"><img src="system/themes/flexible/icons/movel.svg"></a>
+                    <a href="{{ urlNextMonth }}" id="huh_isotope_bookingoverview_next"><img src="system/themes/flexible/icons/mover.svg"></a>
                 </th>
             </tr>
             <tr>

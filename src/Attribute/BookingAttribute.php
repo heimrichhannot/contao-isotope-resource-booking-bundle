@@ -22,14 +22,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class BookingAttribute
 {
-    /**
-     * @var ModelUtil
-     */
-    private $modelUtil;
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
+    private ModelUtil $modelUtil;
+    private TranslatorInterface $translator;
 
     public function __construct(ModelUtil $modelUtil, TranslatorInterface $translator)
     {
