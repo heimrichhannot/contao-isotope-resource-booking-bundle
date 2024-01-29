@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2024-01-29
+- Changed: added encore contracts support
+
 ## [0.1.8] - 2024-01-29
 - Fixed: checkout not working
 - Fixed: backend booking widget not showing correct time

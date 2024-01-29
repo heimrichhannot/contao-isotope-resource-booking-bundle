@@ -7,26 +7,19 @@
     "php": "^7.4 || ^8.0",
     "contao/core-bundle": "^4.9",
     "heimrichhannot/contao-be_explanation-bundle": "^2.4",
-    "heimrichhannot/contao-encore-bundle": "^1.6",
+    "heimrichhannot/contao-encore-contracts": "^1.0",
     "heimrichhannot/contao-utils-bundle": "^2.200",
     "heimrichhannot/contao-fieldpalette-bundle": "^0.6",
     "isotope/isotope-core": "^2.7",
     "symfony/http-kernel": "^4.4 || ^5.0",
     "symfony/translation-contracts": "^1.0 || ^2.0 || ^3.0"
   },
-  "conflict": {
-    "heimrichhannot/contao-encore-bundle": "<1.5"
-  },
   "autoload": {
     "psr-4": {
       "HeimrichHannot\\IsotopeResourceBookingBundle\\": "src/"
     }
   },
-  "config": {
-    "preferred-install": "dist"
-  },
   "extra": {
-    "contao-manager-plugin": "HeimrichHannot\\IsotopeResourceBookingBundle\\ContaoManager\\Plugin",
-    "foxy": true
+    "contao-manager-plugin": "HeimrichHannot\\IsotopeResourceBookingBundle\\ContaoManager\\Plugin"
   }
 }

@@ -1,5 +1,0 @@
-huh_encore:
-  js_entries:
-    - name: "contao-isotope-resource-booking-bundle"
-      requires_css: true
-      file: "vendor/heimrichhannot/contao-isotope-resource-booking-bundle/assets/js/contao-isotope-resource-booking-bundle.js"
