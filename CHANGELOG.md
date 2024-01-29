@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2024-01-29
+## [0.1.8] - 2024-01-29
 - Fixed: checkout not working
 - Fixed: backend booking widget not showing correct time
 - Fixed: missing alt texts on backend widget
