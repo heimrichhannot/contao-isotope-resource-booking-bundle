@@ -32,13 +32,13 @@
                 </th>
             </tr>
             <tr>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Sunday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Monday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Tuesday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Wednesday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Thursday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Friday{% endtrans %}</td>
-                <td class="calendar-day-head tl_folder_tlist">{% trans %}Saturday{% endtrans %}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.0'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.1'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.2'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.3'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.4'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.5'|trans({}, 'contao_default') }}</td>
+                <td class="calendar-day-head tl_folder_tlist">{{ 'DAYS.6'|trans({}, 'contao_default') }}</td>
             </tr>
         </thead>
         <tbody>
@@ -64,11 +64,11 @@
 
                             <div class="date">{{ day }}</div>
                             <div class="data">
-                                <img src="system/themes/flexible/icons/member.svg" alt="{% trans %}huh.isotope.product.booking.booked{% endtrans %}">
+                                <img src="system/themes/flexible/icons/member.svg" alt="{% trans %}huh.isotope.product.booking.booked{% endtrans %}" title="{% trans %}huh.isotope.product.booking.booked{% endtrans %}">
                                 {{ attribute(bookings.booked, day)|default(0) }}
-                                <img src="system/themes/flexible/icons/member_.svg" alt="{% trans %}huh.isotope.product.booking.reserved{% endtrans %}">
+                                <img src="system/themes/flexible/icons/member_.svg" alt="{% trans %}huh.isotope.product.booking.reserved{% endtrans %}" title="{% trans %}huh.isotope.product.booking.reserved{% endtrans %}">
                                 {{ attribute(bookings.reserved, day)|default(0) }}
-                                <img src="system/themes/flexible/icons/admin_.svg" alt="{% trans %}huh.isotope.product.booking.blocked{% endtrans %}">
+                                <img src="system/themes/flexible/icons/admin_.svg" alt="{% trans %}huh.isotope.product.booking.blocked{% endtrans %}" title="{% trans %}huh.isotope.product.booking.blocked{% endtrans %}">
                                 {{ attribute(bookings.blocked, day)|default(0) }}
                             </div>
                         </a>
