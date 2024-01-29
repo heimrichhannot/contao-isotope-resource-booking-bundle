@@ -59,7 +59,17 @@ class BookingAttribute
             return true;
         }
 
-        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?', 'id!=?'], [$product->id, $item->id])) {
+        $columns = ['product_id=?', 'id!=?'];
+        $values = [$product->id, $item->id];
+
+        $collection = ProductCollection::findByPk($item->pid);
+        if ('order' === $collection->type) {
+            $columns[] = 'pid!=?';
+            $values[] = $collection->source_collection_id;
+        }
+
+
+        if (!$collectionItems = ProductCollectionItem::findBy($columns, $values)) {
             return true;
         }
 
@@ -137,10 +147,9 @@ class BookingAttribute
      */
     public function getBookingCountsByMonth(Product $product, int $month, int $year, array $options = [])
     {
-        $defaults = [
+        $options = array_merge([
             'double_blocked_value' => false,
-        ];
-        $options = array_merge($defaults, $options);
+        ], $options);
 
         $firstDay = mktime(0, 0, 0, $month, 1, $year);
         $monthDays = date('t', mktime(0, 0, 0, $month, 1, $year));
@@ -324,10 +333,9 @@ class BookingAttribute
      */
     protected function getBookings($product, Collection $collectionItems, array $options = [])
     {
-        $defaults = [
+        $options = array_merge([
             'double_blocked_value' => false,
-        ];
-        $options = array_merge($defaults, $options);
+        ], $options);
 
         $bookings = [];
 
@@ -336,8 +344,12 @@ class BookingAttribute
                 continue;
             }
 
-            $range =
-                $this->getRange($booking->bookingStart, $booking->bookingStop, $product->bookingBlock ?: 0, $options);
+            $range = $this->getRange(
+                $booking->bookingStart,
+                $booking->bookingStop,
+                $product->bookingBlock ?: 0,
+                $options
+            );
             $bookings[$booking->id] = $range;
         }
 
@@ -403,10 +415,9 @@ class BookingAttribute
      */
     private function isBlockedForItems($collectionItems, IsotopeProduct $product, int $quantity, int $startDate, int $endDate, array $options = []): bool
     {
-        $defaults = [
+        $options = array_merge([
             'double_blocked_value' => false,
-        ];
-        $options = array_merge($defaults, $options);
+        ], $options);
 
         $blockedDates = $this->getBlockedDatesByItems($collectionItems, $product, $quantity);
         $productDates = $this->getRange($startDate, $endDate, $product->bookingBlock, $options);
