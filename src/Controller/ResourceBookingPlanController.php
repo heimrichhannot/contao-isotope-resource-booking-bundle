@@ -91,10 +91,12 @@ class ResourceBookingPlanController extends AbstractController
         if (!is_numeric($id) | !$product = Product::findById($id)) {
             throw new \Exception($this->translator->trans('Invalid id'));
         }
-        $bookings = $this->bookingAttribute->getBookingCountsByMonth($product, date('n'), date('Y'));
+
         $year = is_numeric($request->get('year')) ? (int) $request->get('year') : date('Y');
         $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
         $date = mktime(0, 0, 0, $month, 1, $year);
+
+        $bookings = $this->bookingAttribute->getBookingCountsByMonth($product, $month, $year);
 
         return $this->render('@HeimrichHannotIsotopeResourceBooking/attribute/bookingoverview.html.twig', [
             'bookings' => $bookings,
