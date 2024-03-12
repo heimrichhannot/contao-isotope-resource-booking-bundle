@@ -7,8 +7,16 @@
  */
 
 use HeimrichHannot\IsotopeResourceBookingBundle\DataContainer\IsoProductContainer;
+use HeimrichHannot\IsotopeResourceBookingBundle\Model\ProductBookingModel;
 
 $dca = &$GLOBALS['TL_DCA']['tl_iso_product'];
+
+$dca['config']['ctable'][] = ProductBookingModel::getTable();
+
+$dca['list']['operations']['bookingPlan'] = [
+    'href' => 'table=tl_iso_product_booking',
+    'icon' => 'web/bundles/heimrichhannotisotoperesourcebooking/backend/img/calendar.svg',
+];
 
 $fields = [
     'bookingStart' => [

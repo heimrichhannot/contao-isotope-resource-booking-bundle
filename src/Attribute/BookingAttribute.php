@@ -10,6 +10,8 @@ namespace HeimrichHannot\IsotopeResourceBookingBundle\Attribute;
 
 use Contao\Model\Collection;
 use Contao\StringUtil;
+use HeimrichHannot\FieldpaletteBundle\Manager\FieldPaletteModelManager;
+use HeimrichHannot\FieldpaletteBundle\Model\FieldPaletteModel;
 use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Model\Product;
@@ -22,12 +24,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 class BookingAttribute
 {
-    private ModelUtil $modelUtil;
     private TranslatorInterface $translator;
 
-    public function __construct(ModelUtil $modelUtil, TranslatorInterface $translator)
+    public function __construct(TranslatorInterface $translator)
     {
-        $this->modelUtil = $modelUtil;
         $this->translator = $translator;
     }
 
@@ -95,11 +95,7 @@ class BookingAttribute
      */
     public function getBlockedDates(IsotopeProduct $product, int $quantity = 1, array $options = [])
     {
-        $collectionItems = $this->modelUtil->findModelInstancesBy(
-            ProductCollectionItem::getTable(),
-            [ProductCollectionItem::getTable().'.product_id=?'],
-            [$product->getId()]
-        );
+        $collectionItems = ProductCollectionItem::findBy(['product_id=?'], [$product->id]);
 
         if (!$collectionItems) {
             return $this->getBlockedDatesByProduct($product, $quantity, $options);
@@ -291,6 +287,10 @@ class BookingAttribute
      */
     protected function getReservedDates($product, array $options = [])
     {
+        $options = array([
+            'only_feature_dates' => false,
+        ], $options);
+
         if (!$product->bookingReservedDates) {
             return [];
         }
@@ -302,7 +302,7 @@ class BookingAttribute
         $reservedDates = [];
 
         foreach ($reserved as $pk) {
-            if (null === ($blockedDates = $this->modelUtil->findModelInstanceByPk('tl_fieldpalette', $pk))) {
+            if (null === ($blockedDates = FieldPaletteModel::findByPk($pk))) {
                 continue;
             }
 
