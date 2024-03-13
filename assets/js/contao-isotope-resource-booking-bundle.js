@@ -1,7 +1,6 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css"
 import $ from "jquery";
-import moment from 'moment';
 
 class HeimrichHannotIsotopeResourceBookingBundle
 {
@@ -36,16 +35,14 @@ class HeimrichHannotIsotopeResourceBookingBundle
                 mode: 'range',
                 inline: true,
                 onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    /**
+                     * @var Date date
+                     */
                     var date = dayElem.dateObj;
-
-                    var dateString = HeimrichHannotIsotopeResourceBookingBundle.getComparableDate(date.getTime());
-
-                    $.each(blocked, function(key, value) {
-                        // need to convert to date string since tstamps could be in different timezone format
-                        if (moment.unix(value).format('DD.MM.YYYY') == moment.unix(dateString).format('DD.MM.YYYY')) {
-                            dayElem.className += ' flatpickr-disabled blocked';
-                        }
-                    });
+                    let dateString = date.toISOString().split('T')[0];
+                    if (blocked.includes(dateString)) {
+                        dayElem.className += ' flatpickr-disabled blocked';
+                    }
                 },
             });
         });

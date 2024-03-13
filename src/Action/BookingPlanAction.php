@@ -48,17 +48,6 @@ class BookingPlanAction extends CartAction
         return $GLOBALS['TL_LANG']['MSC']['buttonLabel']['edit_booking_plan'];
     }
 
-    /**
-     * @param $product
-     * @param array $options See BookingAttribute::getRange()
-     *
-     * @return array
-     */
-    public function getBlockedDates($product, array $options = [])
-    {
-        return $this->bookingAttribute->getBlockedDates($product, 1, $options);
-    }
-
     public function generate(IsotopeProduct $product, array $config = [])
     {
         $this->frontendAsset->addActiveEntrypoint('contao-isotope-resource-booking-bundle');
@@ -76,8 +65,14 @@ class BookingPlanAction extends CartAction
             $this->getName(),
             $this->getName(),
             $this->getClasses($product),
-            json_encode($this->getBlockedDates($product, ['double_blocked_value' => true]))
-        ).'<input type="submit" name="submit" class="submit btn btn-primary" value="zum Warenkorb hinzufügen">';
+            htmlspecialchars(json_encode(array_keys(
+                $this->bookingAttribute->getBookedDatesForProduct($product, 1, [
+                    'minDate' => time(),
+                    'doubleBlockedTime' => true,
+                ])
+            )))
+        )
+            .'<input type="submit" name="submit" class="submit btn btn-primary" value="zum Warenkorb hinzufügen">';
     }
 
     /**

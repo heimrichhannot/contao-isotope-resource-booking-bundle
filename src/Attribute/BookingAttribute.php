@@ -12,6 +12,7 @@ use Contao\Model\Collection;
 use Contao\StringUtil;
 use HeimrichHannot\FieldpaletteBundle\Manager\FieldPaletteModelManager;
 use HeimrichHannot\FieldpaletteBundle\Model\FieldPaletteModel;
+use HeimrichHannot\IsotopeResourceBookingBundle\Model\ProductBookingModel;
 use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Model\Product;
@@ -29,6 +30,75 @@ class BookingAttribute
     public function __construct(TranslatorInterface $translator)
     {
         $this->translator = $translator;
+    }
+
+    /**
+     * @param IsotopeProduct|int $product
+     * @param array{
+     *     evaluateBlockedTime: bool,
+     *     doubleBlockedTime: bool,
+     *     minDate: int|null
+     * } $options
+     * @return array
+     */
+    public function getBookedDatesForProduct($product, int $quantity = 1, array $options = []): array
+    {
+        $options = array_merge([
+            'evaluateBlockedTime' => true,
+            'doubleBlockedTime' => false,
+            'minDate' => 0,
+        ], $options);
+
+        if (is_int($product)) {
+            $product = Product::findByPk($product);
+        }
+
+        if (!$product instanceof IsotopeProduct) {
+            return [];
+        }
+
+        if ($options['minDate'] > 0 && $options['evaluateBlockedTime']) {
+            $searchStartDate = (new \DateTime())->setTimestamp($options['minDate']);
+            $searchStartDate->modify('-'.(($product->bookingBlock ?? 0) + 1).' days');
+            $options['minDate'] = $searchStartDate->getTimestamp();
+        }
+
+        $bookings = ProductBookingModel::findBy(
+            ['pid=?', 'start>?'],
+            [$product->id, $options['minDate']]
+        );
+
+        $blockTimeframe = 0;
+        if ($options['evaluateBlockedTime']) {
+            $blockTimeframe = $product->bookingBlock;
+            if ($options['doubleBlockedTime']) {
+                $blockTimeframe *= 2;
+            }
+        }
+
+        $blockedDates = [];
+
+        foreach ($bookings as $booking) {
+            $dateStart = (new \DateTime())->setTimestamp($booking->start);
+            $dateEnd = (new \DateTime())->setTimestamp($booking->stop);
+
+            if ($dateStart > $dateEnd) {
+                continue;
+            }
+
+            if ($blockTimeframe > 0) {
+                $dateStart->modify('-'.$blockTimeframe.' days');
+                $dateEnd->modify('+'.$blockTimeframe.' days');
+            }
+
+            $dateCurrent = clone $dateStart;
+            while ($dateCurrent <= $dateEnd) {
+                $blockedDates[$dateCurrent->format('Y-m-d')] = 1;
+                $dateCurrent->modify('+1 day');
+            }
+        }
+
+        return $blockedDates;
     }
 
     public function checkProductBookingDates(IsotopeProduct $product, int $startDate, int $endDate, int $quantity = 1): bool
@@ -95,6 +165,8 @@ class BookingAttribute
      */
     public function getBlockedDates(IsotopeProduct $product, int $quantity = 1, array $options = [])
     {
+
+
         $collectionItems = ProductCollectionItem::findBy(['product_id=?'], [$product->id]);
 
         if (!$collectionItems) {
@@ -227,10 +299,9 @@ class BookingAttribute
      */
     public function getRange(int $start, int $stop, int $blocking = 0, array $options = [])
     {
-        $defaults = [
+        $options = array_merge([
             'double_blocked_value' => false,
-        ];
-        $options = array_merge($defaults, $options);
+        ], $options);
 
         if (true === $options['double_blocked_value']) {
             $blocking = $blocking * 2;

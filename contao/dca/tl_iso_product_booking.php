@@ -18,7 +18,6 @@ $GLOBALS['TL_DCA']['tl_iso_product_booking'] = [
     'list' => [
         'sorting' => [
             'mode' => 4,
-            'flag' => 7,
             'fields' => ['start'],
             'headerFields' => ['name', 'type', 'sku'],
             'panelLayout' => 'filter;sort,search,limit',
@@ -83,6 +82,7 @@ $GLOBALS['TL_DCA']['tl_iso_product_booking'] = [
         'start' => [
             'exclude' => true,
             'inputType' => 'text',
+            'flag' => 8,
             'eval' => ['rgxp' => 'date', 'datepicker' => true, 'tl_class' => 'w50 wizard', 'mandatory' => true],
             'sql' => "int(10) NOT NULL default '0'",
         ],
