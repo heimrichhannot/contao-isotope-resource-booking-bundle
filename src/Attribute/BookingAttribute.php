@@ -36,8 +36,8 @@ class BookingAttribute
      * @param IsotopeProduct|int $product
      * @param array{
      *     evaluateBlockedTime: bool,
-     *     doubleBlockedTime: bool,
-     *     minDate: int|null
+     *     minDate: int,
+     *     maxDate: int
      * } $options
      * @return array
      */
@@ -45,8 +45,8 @@ class BookingAttribute
     {
         $options = array_merge([
             'evaluateBlockedTime' => true,
-            'doubleBlockedTime' => false,
             'minDate' => 0,
+            'maxDate' => 0,
         ], $options);
 
         if (is_int($product)) {
@@ -57,24 +57,29 @@ class BookingAttribute
             return [];
         }
 
-        if ($options['minDate'] > 0 && $options['evaluateBlockedTime']) {
-            $searchStartDate = (new \DateTime())->setTimestamp($options['minDate']);
-            $searchStartDate->modify('-'.(($product->bookingBlock ?? 0) + 1).' days');
-            $options['minDate'] = $searchStartDate->getTimestamp();
-        }
-
-        $bookings = ProductBookingModel::findBy(
-            ['pid=?', 'start>?'],
-            [$product->id, $options['minDate']]
-        );
-
         $blockTimeframe = 0;
         if ($options['evaluateBlockedTime']) {
             $blockTimeframe = $product->bookingBlock;
-            if ($options['doubleBlockedTime']) {
-                $blockTimeframe *= 2;
-            }
         }
+
+        $columns = ['pid=?'];
+        $values = [$product->id];
+
+        if ($options['minDate'] > 0) {
+            $searchStartDate = (new \DateTime())->setTimestamp($options['minDate']);
+            $searchStartDate->modify('-'.($blockTimeframe + 1).' days');
+            $columns[] = 'start>?';
+            $values[] = $searchStartDate->getTimestamp();
+        }
+
+        if ($options['maxDate'] > 0) {
+            $searchEndDate = (new \DateTime())->setTimestamp($options['maxDate']);
+            $searchEndDate->modify('+'.$blockTimeframe.' days');
+            $columns[] = 'stop<?';
+            $values[] = $searchEndDate->getTimestamp();
+        }
+
+        $bookings = ProductBookingModel::findBy($columns, $values);
 
         $blockedDates = [];
 
@@ -101,13 +106,47 @@ class BookingAttribute
         return $blockedDates;
     }
 
-    public function checkProductBookingDates(IsotopeProduct $product, int $startDate, int $endDate, int $quantity = 1): bool
+    /**
+     * Check if a product is bookable to given dates. Checks bookings and current cart items of all users.
+     */
+    public function isAvailable($product, int $start, int $stop, int $quantity = 1, ?int $collectionItemId = null): bool
     {
-        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?'], [$product->id])) {
-            return true;
+        $dateStart = date('Y-m-d', $start);
+        $dateStop = date('Y-m-d', $stop);
+
+        $bookings = array_keys($this->getBookedDatesForProduct($product, $quantity, [
+            'minDate' => $start,
+            'maxDate' => $stop,
+        ]));
+
+        if (in_array($dateStart, $bookings) || in_array($dateStop, $bookings)) {
+            return false;
         }
 
-        return $this->isBlockedForItems($collectionItems, $product, $quantity, $startDate, $endDate);
+        $columns = ['product_id=?', 'bookingStart!=?', 'bookingStop!=?'];
+        $values = [$product->id, '', ''];
+
+        if ($collectionItemId) {
+            $columns[] = 'id!=?';
+            $values[] = $collectionItemId;
+        }
+
+//        $collection = ProductCollection::findByPk($item->pid);
+//            if ('order' === $collection->type) {
+//                $columns[] = 'pid!=?';
+//                $values[] = $collection->source_collection_id;
+//            }
+
+        if ($collectionItems = ProductCollectionItem::findBy($columns, $values)) {
+            foreach ($collectionItems as $collectionItem) {
+                $cartDates = array_keys($this->createDateRange($collectionItem->bookingStart, $collectionItem->bookingStop, $product->bookingBlock));
+                if (in_array($dateStart, $cartDates) || in_array($dateStop, $cartDates)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -123,27 +162,52 @@ class BookingAttribute
             return true;
         }
 
-        $columns = ['product_id=?', 'id!=?'];
-        $values = [$product->id, $item->id];
-
-        $collection = ProductCollection::findByPk($item->pid);
-        if ('order' === $collection->type) {
-            $columns[] = 'pid!=?';
-            $values[] = $collection->source_collection_id;
+        if (!$this->isAvailable($product, $item->bookingStart, $item->bookingStop, $quantity, $item->id)) {
+            $item->addError($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => $product->getName()]));
+            return false;
         }
 
+        return true;
+    }
 
-        if (!$collectionItems = ProductCollectionItem::findBy($columns, $values)) {
+    private function createDateRange(int $start, int $stop, int $blockTime = 0): array
+    {
+        $blockedDates = [];
+
+        $dateStart = (new \DateTime())->setTimestamp($start);
+        $dateEnd = (new \DateTime())->setTimestamp($stop);
+
+        if ($dateStart > $dateEnd) {
+            return $blockedDates;
+        }
+
+        if ($blockTime > 0) {
+            $dateStart->modify('-'.$blockTime.' days');
+            $dateEnd->modify('+'.$blockTime.' days');
+        }
+
+        $dateCurrent = clone $dateStart;
+        while ($dateCurrent <= $dateEnd) {
+            $blockedDates[$dateCurrent->format('Y-m-d')] = 1;
+            $dateCurrent->modify('+1 day');
+        }
+
+        return $blockedDates;
+    }
+
+
+
+
+
+
+
+    public function checkProductBookingDates(IsotopeProduct $product, int $startDate, int $endDate, int $quantity = 1): bool
+    {
+        if (!$collectionItems = ProductCollectionItem::findBy(['product_id=?'], [$product->id])) {
             return true;
         }
 
-        if ($this->isBlockedForItems($collectionItems, $product, $quantity, $item->bookingStart, $item->bookingStop)) {
-            return true;
-        }
-
-        $item->addError($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => $product->getName()]));
-
-        return false;
+        return $this->isBlockedForItems($collectionItems, $product, $quantity, $startDate, $endDate);
     }
 
     public function itemHasBooking(ProductCollectionItem $item): bool
