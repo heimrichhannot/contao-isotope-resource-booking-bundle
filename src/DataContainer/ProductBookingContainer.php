@@ -8,6 +8,7 @@ use Contao\DataContainer;
 use Contao\Date;
 use Contao\Image;
 use Contao\StringUtil;
+use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
 use HeimrichHannot\IsotopeResourceBookingBundle\Model\ProductBookingModel;
 use HeimrichHannot\UtilsBundle\Util\Utils;
 use Isotope\Model\ProductCollection\Order;
@@ -17,11 +18,13 @@ class ProductBookingContainer
 {
     private TranslatorInterface $translator;
     private Utils $utils;
+    private BookingAttribute $bookingAttribute;
 
-    public function __construct(TranslatorInterface $translator, Utils $utils)
+    public function __construct(TranslatorInterface $translator, Utils $utils, BookingAttribute $bookingAttribute)
     {
         $this->translator = $translator;
         $this->utils = $utils;
+        $this->bookingAttribute = $bookingAttribute;
     }
 
     /**
@@ -58,6 +61,21 @@ class ProductBookingContainer
         return '<b>'.Date::parse(Date::getNumericDateFormat(), $row['start']) . ' - '
             . Date::parse(Date::getNumericDateFormat(), $row['stop']).'</b>'
             . ($suffix ? '<span style="color:#999;padding-left: 3px;">['.$suffix.']</span>' : '');
+    }
+
+    /**
+     * @Callback(table="tl_iso_product_booking", target="fields.start.save")
+     * @Callback(table="tl_iso_product_booking", target="fields.stop.save")
+     */
+    public function onFieldsStartSaveCallback($value, DataContainer $dc)
+    {
+        if (!$this->bookingAttribute->isAvailable($dc->activeRecord->pid, $value, $value, $dc->activeRecord->count , null, [
+            'skipBookingIds' => [(int)$dc->activeRecord->id]
+        ])) {
+            throw new \Exception($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => '']));
+        }
+
+        return $value;
     }
 
     /**

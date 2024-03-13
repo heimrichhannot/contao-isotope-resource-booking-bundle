@@ -18,6 +18,7 @@ huh.isotope:
       booked: Gebucht
       reserved: Reserviert
       blocked: Blockiert
+
   order:
     billingaddress: Rechnungsadresse
     bookingdate: Buchungszeitraum

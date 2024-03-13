@@ -37,7 +37,8 @@ class BookingAttribute
      * @param array{
      *     evaluateBlockedTime: bool,
      *     minDate: int,
-     *     maxDate: int
+     *     maxDate: int,
+     *     skipBookingIds: array<int>,
      * } $options
      * @return array
      */
@@ -47,6 +48,7 @@ class BookingAttribute
             'evaluateBlockedTime' => true,
             'minDate' => 0,
             'maxDate' => 0,
+            'skipBookingIds' => null,
         ], $options);
 
         if (is_int($product)) {
@@ -77,6 +79,10 @@ class BookingAttribute
             $searchEndDate->modify('+'.$blockTimeframe.' days');
             $columns[] = 'stop<?';
             $values[] = $searchEndDate->getTimestamp();
+        }
+
+        if (!empty($options['skipBookingIds'])) {
+            $columns[] = 'id NOT IN ('.implode(',', $options['skipBookingIds']).')';
         }
 
         $bookings = ProductBookingModel::findBy($columns, $values);
@@ -154,14 +160,19 @@ class BookingAttribute
     /**
      * Check if a product is bookable to given dates. Checks bookings and current cart items of all users.
      */
-    public function isAvailable($product, int $start, int $stop, int $quantity = 1, ?int $collectionItemId = null): bool
+    public function isAvailable($product, int $start, int $stop, int $quantity = 1, ?int $collectionItemId = null, array $options = []): bool
     {
+        $options = array_merge([
+            'skipBookingIds' => null,
+        ], $options);
+
         $dateStart = date('Y-m-d', $start);
         $dateStop = date('Y-m-d', $stop);
 
         $bookings = array_keys($this->getBookedDatesForProduct($product, $quantity, [
             'minDate' => $start,
             'maxDate' => $stop,
+            'skipBookingIds' => $options['skipBookingIds'],
         ]));
 
         if (in_array($dateStart, $bookings) || in_array($dateStop, $bookings)) {

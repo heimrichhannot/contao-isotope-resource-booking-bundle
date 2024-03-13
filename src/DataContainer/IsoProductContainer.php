@@ -14,11 +14,9 @@ use Contao\DataContainer;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
-use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
 use HeimrichHannot\IsotopeResourceBookingBundle\Controller\ResourceBookingPlanController;
 use Isotope\Model\Product;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Twig\Environment;
 
 class IsoProductContainer
 {
