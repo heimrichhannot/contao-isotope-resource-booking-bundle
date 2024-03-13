@@ -77,6 +77,8 @@ class BookingPlanTableMigration implements MigrationInterface
 
     private function migrateBookings(bool $run = false): bool
     {
+//        tl_iso_product_collection.type = 'order';
+
         $items = ProductCollectionItem::findBy(
             ['product_id =?', 'bookingStart!=?', 'bookingStop!=?'],
             [32, '', '']
@@ -90,6 +92,8 @@ class BookingPlanTableMigration implements MigrationInterface
         }
 
         foreach ($items as $item) {
+            $collection = $item->getRelated('pid');
+
             if (!$item->bookingStart || !$item->bookingStop) {
                 continue;
             }

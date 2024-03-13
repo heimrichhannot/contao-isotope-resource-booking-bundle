@@ -98,14 +98,14 @@ $fields = [
             ],
         ],
     ],
-    'bookingOverview' => [
-        'inputType' => 'huh_be_explanation',
-        'eval' => [
-            'text_callback' => [IsoProductContainer::class, 'onBookingOverviewTextCallback'],
-            'tl_class' => 'clr',
-        ],
-        'attributes' => ['legend' => 'inventory_legend'],
-    ],
+//    'bookingOverview' => [
+//        'inputType' => 'huh_be_explanation',
+//        'eval' => [
+//            'text_callback' => [IsoProductContainer::class, 'onBookingOverviewTextCallback'],
+//            'tl_class' => 'clr',
+//        ],
+//        'attributes' => ['legend' => 'inventory_legend'],
+//    ],
 ];
 
 $dca['fields'] = array_merge($dca['fields'], $fields);

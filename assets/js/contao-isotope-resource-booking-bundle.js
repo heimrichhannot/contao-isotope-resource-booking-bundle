@@ -63,7 +63,7 @@ class HeimrichHannotIsotopeResourceBookingBundle
             data: {'productId': productId, 'quantity': qantity},
             success: function(data) {
                 if (undefined !== data.result.data.blocked) {
-                    HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(data.result.data.blocked);
+                    HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(data.result.data.blocked, data.result.data.reserved);
                 } else {
                     alert('Ein Fehler ist aufgetreten!');
                 }

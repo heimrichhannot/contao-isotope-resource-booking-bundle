@@ -8,7 +8,6 @@
 
 namespace HeimrichHannot\IsotopeResourceBookingBundle\EventListener\Isotope;
 
-use Contao\CoreBundle\ServiceAnnotation\Hook;
 use HeimrichHannot\IsotopeResourceBookingBundle\Attribute\BookingAttribute;
 use Isotope\Model\ProductCollection;
 use Isotope\Model\ProductCollectionItem;
@@ -36,11 +35,11 @@ class PostAddProductToCollectionListener
             return;
         }
 
-        [$bookingStart, $bookingStop] = $this->bookingAttribute->splitUpBookingDates($changes);
+        $bookingDates = explode('bis', $changes);
 
-        if ($bookingStart && $bookingStop) {
-            $item->bookingStart = $bookingStart;
-            $item->bookingStop = $bookingStop;
+        if ($bookingDates[0] && $bookingDates[1]) {
+            $item->bookingStart = strtotime(trim($bookingDates[0]));
+            $item->bookingStop = strtotime(trim($bookingDates[1]));
             $item->tstamp = time();
             $item->save();
         }

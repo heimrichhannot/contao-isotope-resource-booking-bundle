@@ -64,25 +64,4 @@ class IsoProductContainer
             . Image::getHtml($icon, $label, 'width="16" height="16"')
             . '</a> ';
     }
-
-    /**
-     * Generates an overview of bookings for product.
-     *
-     * @return string An Html-Code
-     */
-    public function onBookingOverviewTextCallback(array $attributes)
-    {
-        $product = Product::findById($attributes['dataContainer']->id);
-        $request = $this->requestStack->getCurrentRequest();
-
-        $year = is_numeric($request->get('year')) ? (int) $request->get('year') : date('Y');
-        $month = is_numeric($request->get('month')) ? (int) $request->get('month') : date('n');
-
-        if ($request->request->has('huh_isotope_resource_booking_'.$product->id)) {
-            $value = $request->request->get('huh_isotope_resource_booking_'.$product->id);
-            [$month, $year] = explode('_', $value);
-        }
-
-        return $this->resourceBookingPlanController->renderBookingOverview($product, $month, $year);
-    }
 }

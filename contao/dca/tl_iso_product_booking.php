@@ -1,5 +1,8 @@
 <?php
 
+use Contao\Image;
+use Contao\StringUtil;
+
 $GLOBALS['TL_DCA']['tl_iso_product_booking'] = [
     // Config
     'config' => [
@@ -108,7 +111,7 @@ $GLOBALS['TL_DCA']['tl_iso_product_booking'] = [
             'search' => true,
             'sorting' => true,
             'inputType' => 'text',
-            'eval' => ['tl_class' => 'w50', 'readonly' => true],
+            'eval' => ['tl_class' => 'w50 wizard', 'readonly' => true],
             'sql' => "varchar(64) NOT NULL default ''",
         ],
     ],

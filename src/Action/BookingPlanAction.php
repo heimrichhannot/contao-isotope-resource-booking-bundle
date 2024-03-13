@@ -142,26 +142,4 @@ class BookingPlanAction extends CartAction
 
         return true;
     }
-
-    /**
-     * @return ProductCollectionItem|null
-     */
-    private function getCurrentCartItem(IsotopeProduct $product = null)
-    {
-        if (null === $product || !\Input::get('collection_item')) {
-            return null;
-        }
-
-        /** @var ProductCollectionItem $item */
-        $item = ProductCollectionItem::findByPk(\Input::get('collection_item'));
-
-        if ($item->pid == Isotope::getCart()->id
-            && $item->hasProduct()
-            && $item->getProduct()->getProductId() == $product->getProductId()
-        ) {
-            return $item;
-        }
-
-        return null;
-    }
 }
