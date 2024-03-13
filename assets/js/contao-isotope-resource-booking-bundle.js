@@ -16,13 +16,14 @@ class HeimrichHannotIsotopeResourceBookingBundle
     };
 
     initBookingPlan() {
-        let input = $(document).find('#bookingPlan'),
-            blocked = input.data('blocked');
+        let input = $(document).find('#bookingPlan');
+        let blocked = input.data('blocked');
+        let reserved = input.data('reserved');
 
-        HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(blocked);
+        HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(blocked, reserved);
     };
 
-    static initFlatpickr(blocked) {
+    static initFlatpickr(blocked, reserved) {
         let lang = document.querySelector('html').getAttribute('lang');
 
         import(/* webpackChunkName: "flatpickr-[request]" */ 'flatpickr/dist/l10n/' + lang + '.js').then((locale) =>
@@ -42,6 +43,8 @@ class HeimrichHannotIsotopeResourceBookingBundle
                     let dateString = date.toISOString().split('T')[0];
                     if (blocked.includes(dateString)) {
                         dayElem.className += ' flatpickr-disabled blocked';
+                    } else if (reserved.includes(dateString)) {
+                        dayElem.className += ' flatpickr-disabled reserved';
                     }
                 },
             });

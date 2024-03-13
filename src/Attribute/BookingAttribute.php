@@ -107,6 +107,51 @@ class BookingAttribute
     }
 
     /**
+     * @param IsotopeProduct|int $product
+     * @param int|null $collectionItemId
+     * @return array
+     */
+    public function getCartDatesForProduct($product, ?int $collectionItemId = null): array
+    {
+        if (is_int($product)) {
+            $product = Product::findByPk($product);
+        }
+
+        if (!$product instanceof IsotopeProduct) {
+            return [];
+        }
+
+        $columns = ['product_id=?', 'bookingStart!=?', 'bookingStop!=?'];
+        $values = [$product->id, '', ''];
+
+        if ($collectionItemId) {
+            $columns[] = 'id!=?';
+            $values[] = $collectionItemId;
+        }
+
+//        $collection = ProductCollection::findByPk($item->pid);
+//        if ('order' === $collection->type) {
+//            $columns[] = 'pid!=?';
+//            $values[] = $collection->source_collection_id;
+//        }
+
+        $collectionItems = ProductCollectionItem::findBy($columns, $values);
+        if (!$collectionItems) {
+            return [];
+        }
+
+        $cartDates = [];
+
+        foreach ($collectionItems as $collectionItem) {
+            $cartDates = array_merge(
+                $cartDates,
+                $this->createDateRange($collectionItem->bookingStart, $collectionItem->bookingStop, $product->bookingBlock));
+        }
+
+        return $cartDates;
+    }
+
+    /**
      * Check if a product is bookable to given dates. Checks bookings and current cart items of all users.
      */
     public function isAvailable($product, int $start, int $stop, int $quantity = 1, ?int $collectionItemId = null): bool
@@ -123,27 +168,9 @@ class BookingAttribute
             return false;
         }
 
-        $columns = ['product_id=?', 'bookingStart!=?', 'bookingStop!=?'];
-        $values = [$product->id, '', ''];
-
-        if ($collectionItemId) {
-            $columns[] = 'id!=?';
-            $values[] = $collectionItemId;
-        }
-
-//        $collection = ProductCollection::findByPk($item->pid);
-//            if ('order' === $collection->type) {
-//                $columns[] = 'pid!=?';
-//                $values[] = $collection->source_collection_id;
-//            }
-
-        if ($collectionItems = ProductCollectionItem::findBy($columns, $values)) {
-            foreach ($collectionItems as $collectionItem) {
-                $cartDates = array_keys($this->createDateRange($collectionItem->bookingStart, $collectionItem->bookingStop, $product->bookingBlock));
-                if (in_array($dateStart, $cartDates) || in_array($dateStop, $cartDates)) {
-                    return false;
-                }
-            }
+        $cartDatesForProduct = $this->getCartDatesForProduct($product, $collectionItemId);
+        if (in_array($dateStart, $cartDatesForProduct) || in_array($dateStop, $cartDatesForProduct)) {
+            return false;
         }
 
         return true;

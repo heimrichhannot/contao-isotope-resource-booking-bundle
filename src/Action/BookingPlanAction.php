@@ -57,7 +57,7 @@ class BookingPlanAction extends CartAction
         return sprintf(
                     '<div class="bookingPlan_container" data-update="%s" data-product-id="%s">
                         <label for="%s">%s</label>
-                    <input type="text" name="%s" id="bookingPlan" class="submit %s %s"  data-blocked="%s" required></div>',
+                    <input type="text" name="%s" id="bookingPlan" class="submit %s %s"  data-blocked="%s" data-reserved="%s" required></div>',
             $url,
             $product->id,
             $this->getName(),
@@ -68,9 +68,12 @@ class BookingPlanAction extends CartAction
             htmlspecialchars(json_encode(array_keys(
                 $this->bookingAttribute->getBookedDatesForProduct($product, 1, [
                     'minDate' => time(),
-                    'doubleBlockedTime' => true,
                 ])
-            )))
+            ))),
+            htmlspecialchars(json_encode(array_keys(
+                $this->bookingAttribute->getCartDatesForProduct($product)
+            ))),
+
         )
             .'<input type="submit" name="submit" class="submit btn btn-primary" value="zum Warenkorb hinzufügen">';
     }
