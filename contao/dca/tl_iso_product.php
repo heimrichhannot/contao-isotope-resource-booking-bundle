@@ -25,7 +25,6 @@ $fields = [
             'tl_class' => 'w50 clr',
             'rgxp' => 'natural',
         ],
-        'attributes' => ['legend' => 'inventory_legend'],
         'sql' => "int(10) unsigned NOT NULL default '0'",
     ],
 //    'bookingOverview' => [

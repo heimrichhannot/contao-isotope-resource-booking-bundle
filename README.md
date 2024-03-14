@@ -19,12 +19,16 @@ Install with composer or contao manager and update database afterwards.
 
 ## Usage
 
-To add booking functionality to a product, you need to activate the booking action in the frontend module for bookable products.
+Booking functionality has to be activated in product type setting.
 
-In the backend, you can add the fields bookingBlock, bookingReservedDates and bookingOverview.
+![backend_activate_booking.png](docs%2Fimg%2Fbackend_activate_booking.png)
 
-Field | Description
-------|-----------
-bookingBlock | Days to block around booking date (for shipping, printing, ...)
-bookingReservedDates | Reserve date to block booking
-bookingOverview | Displays a calendar containing information about booked items.
+Additionally, you can activate blocking times. This features allows to add a time frame around the booking date to block it for other bookings. This can be useful for shipping, printing, etc.
+
+Afterwards you'll find a new operation in product list for products of these categories. This operation allows to manage bookings for the product. You'll see a list of all bookings and can add custom booking/blocked timeframges from backend.
+
+![backend_operation.png](docs%2Fimg%2Fbackend_operation.png)
+
+If you activated blocking times in product type settings, you'll see a new field in product settings to manage blocked timeframes.
+
+To output the datepicker in the frontend, you need to activate the edit_booking_plan action in the frontend module settings.

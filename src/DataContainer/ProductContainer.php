@@ -9,7 +9,9 @@
 namespace HeimrichHannot\IsotopeResourceBookingBundle\DataContainer;
 
 use Contao\Backend;
+use Contao\CoreBundle\DataContainer\PaletteManipulator;
 use Contao\CoreBundle\ServiceAnnotation\Callback;
+use Contao\DataContainer;
 use Contao\Image;
 use Contao\Input;
 use Contao\StringUtil;
@@ -23,6 +25,31 @@ class ProductContainer
     public function __construct(BookingAttribute $bookingAttribute)
     {
         $this->bookingAttribute = $bookingAttribute;
+    }
+
+    /**
+     * @Callback(table="tl_iso_product", target="config.onload", priority=-1)
+     */
+    public function onLoadCallback(?DataContainer $dc = null): void
+    {
+        if (!$dc || !$dc->id || !($product = Product::findById($dc->id))) {
+            return;
+        }
+
+        if (!$this->bookingAttribute->isBlockingTimeActive($product)) {
+            return;
+        }
+
+        $pm = PaletteManipulator::create()
+            ->addLegend('booking_legend', 'general_legend')
+            ->addField('bookingBlock', 'booking_legend', PaletteManipulator::POSITION_APPEND);
+
+        foreach (array_keys($GLOBALS['TL_DCA']['tl_iso_product']['palettes'] ?? []) as $name) {
+            if (in_array($name, ['__selector__'])) {
+                continue;
+            }
+            $pm->applyToPalette((string)$name, 'tl_iso_product');
+        }
     }
 
     /**

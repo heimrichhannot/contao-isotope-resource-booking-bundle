@@ -17,7 +17,6 @@ use Isotope\Frontend\ProductAction\CartAction;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Isotope;
 use Isotope\Message;
-use Isotope\Model\ProductCollectionItem;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -110,7 +109,7 @@ class BookingPlanAction extends CartAction
     /**
      * @return bool
      */
-    private function handleAddToCart(IsotopeProduct $product, array $config = [])
+    private function handleAddToCart(IsotopeProduct $product, array $config = []): bool
     {
         $module = $config['module'];
         $quantity = 1;
@@ -142,4 +141,11 @@ class BookingPlanAction extends CartAction
 
         return true;
     }
+
+    public function isAvailable(IsotopeProduct $product, array $config = []): bool
+    {
+        return $this->bookingAttribute->isActive($product);
+    }
+
+
 }

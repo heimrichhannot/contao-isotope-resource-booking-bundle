@@ -10,6 +10,7 @@ namespace HeimrichHannot\IsotopeResourceBookingBundle\Attribute;
 
 use Contao\Model\Collection;
 use Contao\StringUtil;
+use GuzzleHttp\Promise\Is;
 use HeimrichHannot\FieldpaletteBundle\Manager\FieldPaletteModelManager;
 use HeimrichHannot\FieldpaletteBundle\Model\FieldPaletteModel;
 use HeimrichHannot\IsotopeResourceBookingBundle\Model\ProductBookingModel;
@@ -32,9 +33,14 @@ class BookingAttribute
         $this->translator = $translator;
     }
 
-    public function isActive(Product $product): bool
+    public function isActive(IsotopeProduct $product): bool
     {
         return (bool) $product->getType()->addResourceBooking;
+    }
+
+    public function isBlockingTimeActive(IsotopeProduct $product): bool
+    {
+        return ($this->isActive($product) && (bool)$product->getType()->allowBlockingTime);
     }
 
     /**

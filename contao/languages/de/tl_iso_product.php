@@ -14,6 +14,11 @@ $lang['bookingBlock'] = [
 ];
 
 /**
+ * Legends
+ */
+$lang['booking_legend'] = 'Buchungseinstellungen';
+
+/**
  * Operations
  */
 $lang['bookingPlan'] = ['Buchungsplan', 'Buchungsplan anzeigen'];

@@ -5,7 +5,8 @@ use Contao\CoreBundle\DataContainer\PaletteManipulator;
 $dca = &$GLOBALS['TL_DCA']['tl_iso_producttype'];
 
 PaletteManipulator::create()
-    ->addField('addResourceBooking', 'expert_legend', PaletteManipulator::POSITION_APPEND)
+    ->addLegend('booking_legend', 'description_legend', PaletteManipulator::POSITION_AFTER, true)
+    ->addField('addResourceBooking', 'booking_legend', PaletteManipulator::POSITION_APPEND)
     ->applyToPalette('standard', 'tl_iso_producttype');
 
 $dca['palettes']['__selector__'][] = 'addResourceBooking';
