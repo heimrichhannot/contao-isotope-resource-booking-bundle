@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2024-03-14
+This release introduces a own table to booking data. So it is very important to run the migration after updating to this version.
+
+- Changed: booking data now stored in own table 
+- Changed: a lot of refactoring and cleanup
+- Changed: reserved dates (products in cart) now visible in picker with own css class
+- Changed: removed fieldpalette dependency
+- Changed: removed moments.js dependency
+
 ## [0.1.9] - 2024-01-29
 - Changed: added encore contracts support
 
