@@ -73,7 +73,7 @@ class IsotopeBooking000200Migration implements MigrationInterface
         }
 
         Database::getInstance()->query("CREATE TABLE `tl_iso_product_booking` (
-          `id` int(10) UNSIGNED NOT NULL,
+          `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
           `pid` int(10) UNSIGNED NOT NULL DEFAULT '0',
           `tstamp` int(10) UNSIGNED NOT NULL DEFAULT '0',
           `start` int(11) NOT NULL DEFAULT '0',
@@ -181,24 +181,27 @@ class IsotopeBooking000200Migration implements MigrationInterface
     private function migrateBookings(bool $run = false): bool
     {
         $items = ProductCollectionItem::findBy(
-            ['type=?', 'bookingStart!=?', 'bookingStop!=?'],
-            ['order', '', '']
+            ['bookingStart!=?', 'bookingStop!=?'],
+            ['', '']
         );
         if (!$items) {
             return $run;
         }
 
-        if (!$run) {
-            return true;
-        }
-
         foreach ($items as $item) {
+            /** @var ProductCollection $order */
+            $order = $item->getRelated('pid');
+            if (!$order || 'order' !== $order->type) {
+                continue;
+            }
+
             if (!$item->bookingStart || !$item->bookingStop) {
                 continue;
             }
 
-            /** @var ProductCollection $order */
-            $order = $item->getRelated('pid');
+            if (!$run) {
+                return true;
+            }
 
             $bookingModel = new ProductBookingModel();
             $bookingModel->pid = $item->product_id;
