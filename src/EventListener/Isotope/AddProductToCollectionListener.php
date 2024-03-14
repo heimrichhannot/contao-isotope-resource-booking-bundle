@@ -48,7 +48,7 @@ class AddProductToCollectionListener
             return 0;
         }
 
-        if (!$this->bookingAttribute->checkProductBookingDates($product, $startDate, $endDate)) {
+        if (!$this->bookingAttribute->isAvailable($product, $startDate, $endDate)) {
             Message::addError($this->translator->trans('huh.isotope.collection.booking.error.overbooked', ['%product%' => $product->getName()]));
 
             return 0;

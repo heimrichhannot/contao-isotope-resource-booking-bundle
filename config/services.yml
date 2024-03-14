@@ -6,5 +6,5 @@ services:
       $urlGenerator: '@contao.routing.url_generator'
 
   HeimrichHannot\IsotopeResourceBookingBundle\:
-    resource: "../src/{Action,Asset,Attribute,Controller,DataContainer,EventListener}/*"
+    resource: "../src/{Action,Asset,Attribute,Controller,DataContainer,EventListener,Migration}/*"
     public: true

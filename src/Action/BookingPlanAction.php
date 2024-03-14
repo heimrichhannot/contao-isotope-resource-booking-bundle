@@ -17,7 +17,6 @@ use Isotope\Frontend\ProductAction\CartAction;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Isotope;
 use Isotope\Message;
-use Isotope\Model\ProductCollectionItem;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -48,17 +47,6 @@ class BookingPlanAction extends CartAction
         return $GLOBALS['TL_LANG']['MSC']['buttonLabel']['edit_booking_plan'];
     }
 
-    /**
-     * @param $product
-     * @param array $options See BookingAttribute::getRange()
-     *
-     * @return array
-     */
-    public function getBlockedDates($product, array $options = [])
-    {
-        return $this->bookingAttribute->getBlockedDates($product, 1, $options);
-    }
-
     public function generate(IsotopeProduct $product, array $config = [])
     {
         $this->frontendAsset->addActiveEntrypoint('contao-isotope-resource-booking-bundle');
@@ -68,7 +56,7 @@ class BookingPlanAction extends CartAction
         return sprintf(
                     '<div class="bookingPlan_container" data-update="%s" data-product-id="%s">
                         <label for="%s">%s</label>
-                    <input type="text" name="%s" id="bookingPlan" class="submit %s %s"  data-blocked="%s" required></div>',
+                    <input type="text" name="%s" id="bookingPlan" class="submit %s %s"  data-blocked="%s" data-reserved="%s" required></div>',
             $url,
             $product->id,
             $this->getName(),
@@ -76,8 +64,17 @@ class BookingPlanAction extends CartAction
             $this->getName(),
             $this->getName(),
             $this->getClasses($product),
-            json_encode($this->getBlockedDates($product, ['double_blocked_value' => true]))
-        ).'<input type="submit" name="submit" class="submit btn btn-primary" value="zum Warenkorb hinzufügen">';
+            htmlspecialchars(json_encode(array_keys(
+                $this->bookingAttribute->getBookedDatesForProduct($product, 1, [
+                    'minDate' => time(),
+                ])
+            ))),
+            htmlspecialchars(json_encode(array_keys(
+                $this->bookingAttribute->getCartDatesForProduct($product)
+            ))),
+
+        )
+            .'<input type="submit" name="submit" class="submit btn btn-primary" value="zum Warenkorb hinzufügen">';
     }
 
     /**
@@ -112,7 +109,7 @@ class BookingPlanAction extends CartAction
     /**
      * @return bool
      */
-    private function handleAddToCart(IsotopeProduct $product, array $config = [])
+    private function handleAddToCart(IsotopeProduct $product, array $config = []): bool
     {
         $module = $config['module'];
         $quantity = 1;
@@ -145,25 +142,10 @@ class BookingPlanAction extends CartAction
         return true;
     }
 
-    /**
-     * @return ProductCollectionItem|null
-     */
-    private function getCurrentCartItem(IsotopeProduct $product = null)
+    public function isAvailable(IsotopeProduct $product, array $config = []): bool
     {
-        if (null === $product || !\Input::get('collection_item')) {
-            return null;
-        }
-
-        /** @var ProductCollectionItem $item */
-        $item = ProductCollectionItem::findByPk(\Input::get('collection_item'));
-
-        if ($item->pid == Isotope::getCart()->id
-            && $item->hasProduct()
-            && $item->getProduct()->getProductId() == $product->getProductId()
-        ) {
-            return $item;
-        }
-
-        return null;
+        return $this->bookingAttribute->isActive($product);
     }
+
+
 }

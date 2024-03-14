@@ -1,7 +1,6 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css"
 import $ from "jquery";
-import moment from 'moment';
 
 class HeimrichHannotIsotopeResourceBookingBundle
 {
@@ -17,13 +16,14 @@ class HeimrichHannotIsotopeResourceBookingBundle
     };
 
     initBookingPlan() {
-        let input = $(document).find('#bookingPlan'),
-            blocked = input.data('blocked');
+        let input = $(document).find('#bookingPlan');
+        let blocked = input.data('blocked');
+        let reserved = input.data('reserved');
 
-        HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(blocked);
+        HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(blocked, reserved);
     };
 
-    static initFlatpickr(blocked) {
+    static initFlatpickr(blocked, reserved) {
         let lang = document.querySelector('html').getAttribute('lang');
 
         import(/* webpackChunkName: "flatpickr-[request]" */ 'flatpickr/dist/l10n/' + lang + '.js').then((locale) =>
@@ -36,16 +36,16 @@ class HeimrichHannotIsotopeResourceBookingBundle
                 mode: 'range',
                 inline: true,
                 onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    /**
+                     * @var Date date
+                     */
                     var date = dayElem.dateObj;
-
-                    var dateString = HeimrichHannotIsotopeResourceBookingBundle.getComparableDate(date.getTime());
-
-                    $.each(blocked, function(key, value) {
-                        // need to convert to date string since tstamps could be in different timezone format
-                        if (moment.unix(value).format('DD.MM.YYYY') == moment.unix(dateString).format('DD.MM.YYYY')) {
-                            dayElem.className += ' flatpickr-disabled blocked';
-                        }
-                    });
+                    let dateString = date.toISOString().split('T')[0];
+                    if (blocked.includes(dateString)) {
+                        dayElem.className += ' flatpickr-disabled blocked';
+                    } else if (reserved.includes(dateString)) {
+                        dayElem.className += ' flatpickr-disabled reserved';
+                    }
                 },
             });
         });
@@ -63,7 +63,7 @@ class HeimrichHannotIsotopeResourceBookingBundle
             data: {'productId': productId, 'quantity': qantity},
             success: function(data) {
                 if (undefined !== data.result.data.blocked) {
-                    HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(data.result.data.blocked);
+                    HeimrichHannotIsotopeResourceBookingBundle.initFlatpickr(data.result.data.blocked, data.result.data.reserved);
                 } else {
                     alert('Ein Fehler ist aufgetreten!');
                 }
