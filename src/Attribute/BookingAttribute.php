@@ -263,7 +263,7 @@ class BookingAttribute
 
     private function getProductBlockedDays (IsotopeProduct $product): int
     {
-        if (in_array('bookingBlock', $product->getType()->getAttributes())) {
+        if ($this->isBlockingTimeActive($product)) {
             return $product->bookingBlock ?? 0;
         }
 

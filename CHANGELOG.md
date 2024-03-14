@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2024-03-14
+- Fixed: timezone issue js
+- Fixed: blocking time evaluation
+
 ## [0.2.0] - 2024-03-14
 This release introduces a own table to booking data. So it is very important to run the migration after updating to this version.
 

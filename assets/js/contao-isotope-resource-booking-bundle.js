@@ -39,8 +39,10 @@ class HeimrichHannotIsotopeResourceBookingBundle
                     /**
                      * @var Date date
                      */
-                    var date = dayElem.dateObj;
-                    let dateString = date.toISOString().split('T')[0];
+                    let date = dayElem.dateObj;
+                    let adjustedDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000));
+                    let dateString = adjustedDate.toISOString().split('T')[0];
+
                     if (blocked.includes(dateString)) {
                         dayElem.className += ' flatpickr-disabled blocked';
                     } else if (reserved.includes(dateString)) {
