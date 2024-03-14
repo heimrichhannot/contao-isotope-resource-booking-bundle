@@ -73,56 +73,66 @@ class IsotopeBooking000200Migration implements MigrationInterface
             $productType->save();
         }
 
-        return false;
+        return $run;
     }
 
     private function migrateReservations(bool $run = false): bool
     {
-        $product = Product::findByPk(32);
-        if (!$product) {
+        /** @var Product[]|Collection|null $products */
+        $products = Product::findAll(['column' => [Product::getTable().'.bookingReservedDates IS NOT NULL']]);
+        if (!$products) {
             return $run;
         }
 
-        if (!$product->bookingReservedDates) {
-            return $run;
-        }
+        foreach ($products as $product) {
+            if (!$product->bookingReservedDates) {
+                return $run;
+            }
 
-        if (!$run) {
-            return true;
-        }
-
-        $ids = StringUtil::deserialize($product->bookingReservedDates, true);
-        foreach ($ids as $id) {
-            $reservation = FieldPaletteModel::findByPk($id);
-            if (!$reservation) {
+            $ids = array_filter(StringUtil::deserialize($product->bookingReservedDates, true));
+            if (empty($ids)) {
                 continue;
             }
 
-            $bookingModel = new ProductBookingModel();
-            $bookingModel->pid = $product->id;
-            $bookingModel->tstamp = time();
-            $bookingModel->start = $reservation->start;
-            $bookingModel->stop = $reservation->stop;
-            $bookingModel->count = $reservation->count;
-            $bookingModel->comment = "Reservierung vom ".date("d.m.Y", $reservation->tstamp);
-            $bookingModel->save();
+            if (!$run) {
+                return true;
+            }
 
-            $reservation->delete();
+            foreach ($ids as $key => $id) {
+                $reservation = FieldPaletteModel::findByPk($id);
+                if (!$reservation) {
+
+                    continue;
+                }
+
+                if (empty($reservation->start) || empty($reservation->stop)) {
+                    $reservation->delete();
+                    continue;
+                }
+
+                $bookingModel = new ProductBookingModel();
+                $bookingModel->pid = $product->id;
+                $bookingModel->tstamp = time();
+                $bookingModel->start = (int)$reservation->start;
+                $bookingModel->stop = (int)$reservation->stop;
+                $bookingModel->count = $reservation->count;
+                $bookingModel->comment = "Reservierung vom ".date("d.m.Y", $reservation->tstamp);
+                $bookingModel->save();
+
+                $reservation->delete();
+            }
+            $product->bookingReservedDates = null;
+            $product->save();
         }
-
-        $product->bookingReservedDates = null;
-        $product->save();
 
         return true;
     }
 
     private function migrateBookings(bool $run = false): bool
     {
-//        tl_iso_product_collection.type = 'order';
-
         $items = ProductCollectionItem::findBy(
-            ['product_id =?', 'bookingStart!=?', 'bookingStop!=?'],
-            [32, '', '']
+            ['type=?', 'bookingStart!=?', 'bookingStop!=?'],
+            ['order', '', '']
         );
         if (!$items) {
             return $run;
@@ -133,8 +143,6 @@ class IsotopeBooking000200Migration implements MigrationInterface
         }
 
         foreach ($items as $item) {
-            $collection = $item->getRelated('pid');
-
             if (!$item->bookingStart || !$item->bookingStop) {
                 continue;
             }
@@ -150,7 +158,8 @@ class IsotopeBooking000200Migration implements MigrationInterface
             $bookingModel->count = $item->quantity;
             $bookingModel->comment = $item->bookingComment;
             $bookingModel->document_number = $order->getDocumentNumber();
-            $bookingModel->product_collection_id = $item->id;
+            $bookingModel->product_collection_id = $order->id;
+            $bookingModel->product_collection_item_id = $item->id;
             $bookingModel->save();
 
             $item->bookingStart = '';

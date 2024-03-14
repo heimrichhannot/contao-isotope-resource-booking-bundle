@@ -79,6 +79,11 @@ $GLOBALS['TL_DCA']['tl_iso_product_booking'] = [
             'sql' => "int(10) unsigned NOT NULL default 0",
             'relation' => ['type' => 'belongsTo', 'load' => 'lazy']
         ],
+        'product_collection_item_id' => [
+            'foreignKey' => 'tl_iso_product_collection_item.id',
+            'sql' => "int(10) unsigned NOT NULL default 0",
+            'relation' => ['type' => 'belongsTo', 'load' => 'lazy']
+        ],
         'tstamp' => [
             'sql' => "int(10) unsigned NOT NULL default 0"
         ],

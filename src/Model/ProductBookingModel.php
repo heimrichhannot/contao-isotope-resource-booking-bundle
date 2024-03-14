@@ -16,6 +16,7 @@ use Isotope\Interfaces\IsotopeProduct;
  * @property string $comment
  * @property string $document_number
  * @property int $product_collection_id
+ * @property int $product_collection_item_id
  */
 class ProductBookingModel extends Model
 {
