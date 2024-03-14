@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2024-03-14
+- Fixed: create booking table on migration if not exists
+
 ## [0.2.1] - 2024-03-14
 - Fixed: timezone issue js
 - Fixed: blocking time evaluation

@@ -5,6 +5,7 @@ namespace HeimrichHannot\IsotopeResourceBookingBundle\Migration;
 use Contao\CoreBundle\Framework\ContaoFramework;
 use Contao\CoreBundle\Migration\MigrationInterface;
 use Contao\CoreBundle\Migration\MigrationResult;
+use Contao\Database;
 use Contao\Model\Collection;
 use Contao\StringUtil;
 use HeimrichHannot\FieldpaletteBundle\Model\FieldPaletteModel;
@@ -36,9 +37,54 @@ class IsotopeBooking000200Migration implements MigrationInterface
         $this->framework->initialize();
 
         return
-            $this->migrateReservations()
-         || $this->migrateBookings()
-         || $this->migrateActivation();
+            $this->createTable() ||
+            $this->migrateReservations() ||
+            $this->migrateBookings() ||
+            $this->migrateActivation();
+    }
+
+    public function run(): MigrationResult
+    {
+        if (!$this->createTable(true)) {
+            return new MigrationResult(false, $this->getName() . " createTable failed");
+        }
+
+        if (!$this->migrateActivation(true)) {
+            return new MigrationResult(false, $this->getName() . " migrateActivation failed");
+        }
+        if (!$this->migrateReservations(true)) {
+            return new MigrationResult(false, $this->getName() . " migrateReservations failed");
+        }
+        if (!$this->migrateBookings(true)) {
+            return new MigrationResult(false, $this->getName() . " migrateBookings failed");
+        }
+
+        return new MigrationResult(true, $this->getName() . " was successful");
+    }
+
+    private function createTable(bool $run = false): bool
+    {
+        if (Database::getInstance()->tableExists('tl_iso_product_booking', null, true)) {
+            return $run;
+        }
+
+        if (!$run) {
+            return true;
+        }
+
+        Database::getInstance()->query("CREATE TABLE `tl_iso_product_booking` (
+          `id` int(10) UNSIGNED NOT NULL,
+          `pid` int(10) UNSIGNED NOT NULL DEFAULT '0',
+          `tstamp` int(10) UNSIGNED NOT NULL DEFAULT '0',
+          `start` int(11) NOT NULL DEFAULT '0',
+          `stop` int(11) NOT NULL DEFAULT '0',
+          `count` int(11) NOT NULL DEFAULT '1',
+          `document_number` varchar(64) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+          `comment` text COLLATE utf8_unicode_ci,
+          `product_collection_id` int(10) UNSIGNED NOT NULL DEFAULT '0',
+          `product_collection_item_id` int(10) UNSIGNED NOT NULL DEFAULT '0'
+        )");
+        return true;
     }
 
     private function migrateActivation(bool $run = false): bool
@@ -174,18 +220,5 @@ class IsotopeBooking000200Migration implements MigrationInterface
         return true;
     }
 
-    public function run(): MigrationResult
-    {
-        if (!$this->migrateActivation(true)) {
-            return new MigrationResult(false, $this->getName() . " migrateActivation failed");
-        }
-        if (!$this->migrateReservations(true)) {
-            return new MigrationResult(false, $this->getName() . " migrateReservations failed");
-        }
-        if (!$this->migrateBookings(true)) {
-            return new MigrationResult(false, $this->getName() . " migrateBookings failed");
-        }
 
-        return new MigrationResult(true, $this->getName() . " was successful");
-    }
 }
