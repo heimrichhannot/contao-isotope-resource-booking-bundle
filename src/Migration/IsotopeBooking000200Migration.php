@@ -78,6 +78,10 @@ class IsotopeBooking000200Migration implements MigrationInterface
 
     private function migrateReservations(bool $run = false): bool
     {
+        if (!class_exists(FieldPaletteModel::class)) {
+            return $run;
+        }
+
         /** @var Product[]|Collection|null $products */
         $products = Product::findAll(['column' => [Product::getTable().'.bookingReservedDates IS NOT NULL']]);
         if (!$products) {

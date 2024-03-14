@@ -9,15 +9,9 @@
 namespace HeimrichHannot\IsotopeResourceBookingBundle\Attribute;
 
 use Contao\Model\Collection;
-use Contao\StringUtil;
-use GuzzleHttp\Promise\Is;
-use HeimrichHannot\FieldpaletteBundle\Manager\FieldPaletteModelManager;
-use HeimrichHannot\FieldpaletteBundle\Model\FieldPaletteModel;
 use HeimrichHannot\IsotopeResourceBookingBundle\Model\ProductBookingModel;
-use HeimrichHannot\UtilsBundle\Model\ModelUtil;
 use Isotope\Interfaces\IsotopeProduct;
 use Isotope\Model\Product;
-use Isotope\Model\ProductCollection;
 use Isotope\Model\ProductCollectionItem;
 use Symfony\Contracts\Translation\TranslatorInterface;
 

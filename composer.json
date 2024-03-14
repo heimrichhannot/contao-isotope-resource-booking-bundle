@@ -9,7 +9,6 @@
     "heimrichhannot/contao-be_explanation-bundle": "^2.4",
     "heimrichhannot/contao-encore-contracts": "^1.0",
     "heimrichhannot/contao-utils-bundle": "^2.200",
-    "heimrichhannot/contao-fieldpalette-bundle": "^0.6",
     "isotope/isotope-core": "^2.8",
     "symfony/http-kernel": "^4.4 || ^5.0",
     "symfony/translation-contracts": "^1.0 || ^2.0 || ^3.0"
