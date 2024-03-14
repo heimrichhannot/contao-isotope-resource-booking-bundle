@@ -32,6 +32,11 @@ class BookingAttribute
         $this->translator = $translator;
     }
 
+    public function isActive(Product $product): bool
+    {
+        return (bool) $product->getType()->addResourceBooking;
+    }
+
     /**
      * @param IsotopeProduct|int $product
      * @param array{
@@ -61,7 +66,7 @@ class BookingAttribute
 
         $blockTimeframe = 0;
         if ($options['evaluateBlockedTime']) {
-            $blockTimeframe = $product->bookingBlock;
+            $blockTimeframe = $this->getProductBlockedDays($product);
         }
 
         $columns = ['pid=?'];
@@ -141,6 +146,7 @@ class BookingAttribute
 //            $values[] = $collection->source_collection_id;
 //        }
 
+        /** @var ProductCollectionItem[]|Collection $collectionItems */
         $collectionItems = ProductCollectionItem::findBy($columns, $values);
         if (!$collectionItems) {
             return [];
@@ -151,7 +157,12 @@ class BookingAttribute
         foreach ($collectionItems as $collectionItem) {
             $cartDates = array_merge(
                 $cartDates,
-                $this->createDateRange($collectionItem->bookingStart, $collectionItem->bookingStop, $product->bookingBlock));
+                $this->createDateRange(
+                    $collectionItem->bookingStart,
+                    $collectionItem->bookingStop,
+                    $this->getProductBlockedDays($collectionItem->getProduct())
+                )
+            );
         }
 
         return $cartDates;
@@ -248,5 +259,14 @@ class BookingAttribute
         $dateEnd = (new \DateTime())->setTimestamp($item->bookingStop);
         $interval = $dateStart->diff($dateEnd);
         return $interval->days + 1;
+    }
+
+    private function getProductBlockedDays (IsotopeProduct $product): int
+    {
+        if (in_array('bookingBlock', $product->getType()->getAttributes())) {
+            return $product->bookingBlock ?? 0;
+        }
+
+        return 0;
     }
 }
